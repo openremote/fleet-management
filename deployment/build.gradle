@@ -1,0 +1,33 @@
+apply plugin: "java"
+apply plugin: "groovy"
+
+dependencies {
+    // Add deployment module dependencies on openremote modules
+    compile project(":openremote:manager")
+    testCompile project(":openremote:test")
+
+    // Add deployment module dependencies on custom modules
+    // compile project(":agent")
+    // compile project(":model")
+    // compile project(":manager")
+}
+
+test {
+    workingDir = project(":openremote").projectDir
+}
+
+task installDist(type: Copy) {
+    mustRunAfter (parent.getTasksByName('installDist', true).findAll {it.project != project})
+    into "${buildDir}"
+
+    into("image") {
+        from projectDir
+        exclude "build.gradle", "Dockerfile", "build", "**/*.mbtiles", "src", "**/*.md", ".gitignore"
+    }
+
+    from("Dockerfile")
+
+    into("image/manager/extensions") {
+        from jar.outputs
+    }
+}

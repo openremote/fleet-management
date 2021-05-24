@@ -1,0 +1,108 @@
+# OpenRemote v3
+#
+# Profile for deploying the custom stack; uses deployment-data named volume
+# to expose customisations to the manager and keycloak images. To run this profile you need to specify the following
+# environment variables:
+#
+#    PASSWORD - Initial admin user password
+#    DEPLOYMENT_HOST - Domain hostname of where this instance will be exposed (localhost or public domain)
+#    DEPLOYMENT_VERSION - Tag to use for deployment image (must match the tag used when building the deployment image)
+#    MANAGER_VERSION - Tag to use for manager image (must match the tag used when building the manager image)
+#
+# Please see profile/deploy.yml for configuration details for each service.
+#
+# To perform updates, build code and prepare Docker images:
+#
+#   ./gradlew clean installDist
+#
+# Then recreate deployment image:
+#
+#  DEPLOYMENT_VERSION=$(git rev-parse --short HEAD)
+#  cd openremote
+#  MANAGER_VERSION=$(git rev-parse --short HEAD)
+#  cd ..
+#  docker build -t openremote/manager:$MANAGER_VERSION ./openremote/manager/build/install/manager/
+#  docker build -t openremote/custom-deployment:$DEPLOYMENT_VERSION ./deployment/build/
+#  docker-compose -p custom down
+#  docker volume rm custom_deployment-data
+#  Do the following volume rm command if you want a clean install (wipe all existing data)
+#  docker volume rm custom_postgresql-data
+#  PASSWORD=secret DEPLOYMENT_HOST=my.domain.com docker-compose -p custom up -d
+#
+# All data is kept in volumes. Create a backup of the volumes to preserve data.
+#
+#
+version: '2.4'
+
+volumes:
+  proxy-data:
+  deployment-data:
+  postgresql-data:
+
+services:
+
+  # This service will only populate an empty volume on startup and then exit.
+  # If the volume already contains data, it exits immediately.
+  deployment:
+    image: openremote/custom-deployment:${DEPLOYMENT_VERSION?DEPLOYMENT_VERSION must be set}
+    volumes:
+      - deployment-data:/deployment
+
+  proxy:
+    image: openremote/proxy:${PROXY_VERSION:-2.1.2.1}
+    restart: always
+    depends_on:
+      manager:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8883:8883"
+    volumes:
+      - proxy-data:/deployment
+    environment:
+      LE_EMAIL: ${ADMIN_EMAIL:-support@openremote.io}
+      DOMAINNAME: staging.${DEPLOYMENT_NAME?DEPLOYMENT_NAME must be set}.openremote.io
+
+  postgresql:
+    image: openremote/postgresql:${POSTGRESQL_VERSION:-9.6.21.0}
+    restart: always
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+
+  keycloak:
+    image: openremote/keycloak:${KEYCLOAK_VERSION:-12.0.1.0}
+    restart: always
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    volumes:
+      - deployment-data:/deployment
+    environment:
+      KEYCLOAK_PASSWORD: ${PASSWORD:?PASSWORD must be set}
+      KEYCLOAK_FRONTEND_URL: ${DEPLOYMENT_HOST:?DEPLOYMENT_HOST must be set}/auth
+
+  manager:
+    image: openremote/manager:${MANAGER_VERSION?MANAGER_VERSION must be set}
+    restart: always
+    logging:
+      options:
+        max-size: "1m"
+        max-file: "10"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - deployment-data:/deployment
+      # Map data is stored local on host
+      - /deployment.local:/deployment.local
+    environment:
+      SETUP_ADMIN_PASSWORD: ${PASSWORD:?PASSWORD must be set}
+      SETUP_EMAIL_HOST: #
+      SETUP_EMAIL_USER: #
+      SETUP_EMAIL_PASSWORD: #
+      SETUP_EMAIL_FROM: no-reply@openremote.io
+      SETUP_EMAIL_FROM_KEYCLOAK: no-reply@openremote.io
+      SETUP_EMAIL_FROM_DEFAULT: admin@openremote.io
+      MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'
+      IDENTITY_NETWORK_HOST: ${DEPLOYMENT_HOST:?DEPLOYMENT_HOST must be set}

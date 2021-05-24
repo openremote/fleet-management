@@ -1,0 +1,9 @@
+rootProject.name = "$projectName"
+
+// Include sub-projects dynamically, every directory with a build.gradle (and no .buildignore)
+fileTree(dir: rootDir, include: "**/build.gradle", excludes: ["**/node_modules/**", "**/generic_app/**"])
+        .filter { it.parent != rootDir }
+        .filter { !file("${it.parent}/.buildignore").exists() }
+        .each {
+    include it.parent.replace(rootDir.canonicalPath, "").replace("\\", ":").replace("/", ":")
+}
