@@ -7,7 +7,6 @@ This project can be compiled and used as it is using the following commands:
 ./gradlew clean installDist
 DEPLOYMENT_VERSION=$(git rev-parse --short HEAD)
 MANAGER_VERSION=$(cd openremote; git rev-parse --short HEAD; cd ..)
-cd ..
 docker build -t openremote/manager:$MANAGER_VERSION ./openremote/manager/build/install/manager/
 docker build -t openremote/custom-deployment:$DEPLOYMENT_VERSION ./deployment/build/
 docker-compose -p custom down
