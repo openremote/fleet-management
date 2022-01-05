@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "workspaces": [
+    "ui/app/*",
+    "openremote/ui/util",
+    "openremote/ui/app/*",
+    "openremote/ui/component/*",
+    "openremote/ui/demo/*"
+  ],
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  }
+}

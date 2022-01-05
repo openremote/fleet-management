@@ -7,9 +7,10 @@ dependencies {
     testCompile project(":openremote:test")
 
     // Add deployment module dependencies on custom modules
-    // compile project(":agent")
-    // compile project(":model")
-    // compile project(":manager")
+     compile project(":agent")
+     compile project(":model")
+     compile project(":manager")
+     compile project(":setup")
 }
 
 test {

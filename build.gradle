@@ -1,3 +1,16 @@
+// Build plugins - This allows the IDEA config to run from the openremote gradle config; it creates some run
+// configurations and also adds compiler parameters
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:1.1"
+    }
+}
+
 allprojects {
     // Apply common project setup but exclude submodule, it has its own build.gradle
     if (!path.startsWith(":openremote")) {

@@ -1,0 +1,18 @@
+apply plugin: "java"
+apply plugin: "groovy"
+
+dependencies {
+    compile resolveProject(":manager")
+    compile resolveProject(":model")
+}
+
+task copyLibs(type: Copy) {
+    into libsDir
+    from configurations.compile
+}
+
+task installDist(type: Copy) {
+    dependsOn jar, copyLibs
+    from libsDir
+    into "${project(':deployment').buildDir}/manager/extensions"
+}

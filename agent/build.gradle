@@ -1,0 +1,17 @@
+apply plugin: "java"
+
+dependencies {
+    compileOnly resolveProject(":agent")
+    compileOnly project(":model")
+}
+
+task copyLibs(type: Copy) {
+    into libsDir
+    from configurations.compile
+}
+
+task installDist(type: Copy) {
+    dependsOn jar, copyLibs
+    from libsDir
+    into "${project(':deployment').buildDir}/image/manager/extensions"
+}

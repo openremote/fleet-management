@@ -47,7 +47,7 @@ services:
       - deployment-data:/deployment
 
   proxy:
-    image: openremote/proxy:${PROXY_VERSION:-2.1.2.1}
+    image: openremote/proxy:latest${PROXY_VERSION:-latest}
     restart: always
     depends_on:
       manager:
@@ -58,9 +58,12 @@ services:
       - "8883:8883"
     volumes:
       - proxy-data:/deployment
+      - deployment-data:/data
     environment:
       LE_EMAIL: ${EMAIL?EMAIL}
       DOMAINNAME: ${DEPLOYMENT_HOST?DEPLOYMENT_HOST must be set}
+      # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
+      #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
 
   postgresql:
     image: openremote/postgresql:${POSTGRESQL_VERSION:-9.6.21.0}
@@ -69,7 +72,7 @@ services:
       - postgresql-data:/var/lib/postgresql/data
 
   keycloak:
-    image: openremote/keycloak:${KEYCLOAK_VERSION:-12.0.1.0}
+    image: openremote/keycloak:${KEYCLOAK_VERSION:-13.0.1.3}
     restart: always
     depends_on:
       postgresql:
@@ -97,10 +100,10 @@ services:
     environment:
       SETUP_ADMIN_PASSWORD: ${PASSWORD?PASSWORD must be set}
       SETUP_EMAIL_HOST: #
+      SETUP_EMAIL_PORT: #
       SETUP_EMAIL_USER: #
       SETUP_EMAIL_PASSWORD: #
       SETUP_EMAIL_FROM: no-reply@openremote.io
       SETUP_EMAIL_FROM_KEYCLOAK: no-reply@openremote.io
       SETUP_EMAIL_FROM_DEFAULT: admin@openremote.io
-      MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'
-      IDENTITY_NETWORK_HOST: ${DEPLOYMENT_HOST?DEPLOYMENT_HOST must be set}
+      #MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'
