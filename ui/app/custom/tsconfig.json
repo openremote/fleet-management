@@ -1,0 +1,10 @@
+{
+  "extends": "../../../openremote/ui/tsconfig",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "strict": false
+  },
+  "references": [
+    { "path": "../../../openremote/ui/component/or-app" }
+  ]
+}

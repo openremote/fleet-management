@@ -1,0 +1,14 @@
+buildDir = "dist"
+
+task clean {
+    doFirst {
+        delete "node_modules"
+    }
+}
+
+task installDist(type: Copy) {
+    dependsOn clean, npmBuild
+    mustRunAfter(resolveTask(":manager:installDist"))
+    from project.buildDir
+    into "${project(':deployment').buildDir}/image/manager/app/${projectDir.name}"
+}

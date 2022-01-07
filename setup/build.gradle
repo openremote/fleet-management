@@ -14,5 +14,5 @@ task copyLibs(type: Copy) {
 task installDist(type: Copy) {
     dependsOn jar, copyLibs
     from libsDir
-    into "${project(':deployment').buildDir}/manager/extensions"
+    into "${project(':deployment').buildDir}/image/manager/extensions"
 }

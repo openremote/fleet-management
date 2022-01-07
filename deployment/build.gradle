@@ -1,20 +1,7 @@
-apply plugin: "java"
-apply plugin: "groovy"
-
-dependencies {
-    // Add deployment module dependencies on openremote modules
-    compile project(":openremote:manager")
-    testCompile project(":openremote:test")
-
-    // Add deployment module dependencies on custom modules
-     compile project(":agent")
-     compile project(":model")
-     compile project(":manager")
-     compile project(":setup")
-}
-
-test {
-    workingDir = project(":openremote").projectDir
+task clean() {
+    doLast {
+        delete "build"
+    }
 }
 
 task installDist(type: Copy) {
@@ -27,8 +14,4 @@ task installDist(type: Copy) {
     }
 
     from("Dockerfile")
-
-    into("image/manager/extensions") {
-        from jar.outputs
-    }
 }
