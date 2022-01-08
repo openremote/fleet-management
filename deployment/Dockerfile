@@ -1,5 +1,7 @@
-# Default deployment when manager-data volume is empty
-FROM registry.access.redhat.com/ubi8-minimal
+# ----------------------------------------------------------------------------------------
+# Docker image for populating deployment-data volume with project specific customisations
+# ----------------------------------------------------------------------------------------
+FROM scratch
 
 RUN mkdir -p /deployment/manager/extensions
 ADD image /deployment
