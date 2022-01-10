@@ -1,10 +1,14 @@
 {
   "extends": "../../../openremote/ui/tsconfig",
   "compilerOptions": {
-    "tsBuildInfoFile": "./.tsbuildinfo",
+    "outDir": "./lib",
+    "rootDir": "src",
     "strict": false
   },
+  "include": [
+    "./src"
+  ],
   "references": [
-    { "path": "../../../openremote/ui/component/or-app" }
+    { "path": "../../../openremote/ui/app/manager" }
   ]
 }

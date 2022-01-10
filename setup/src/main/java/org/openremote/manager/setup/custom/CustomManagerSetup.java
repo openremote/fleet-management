@@ -32,9 +32,4 @@ public class CustomManagerSetup extends ManagerSetup {
     public void onStart() throws Exception {
         super.onStart();
     }
-
-    @Override
-    public void onInit() throws Exception {
-        super.onInit();
-    }
 }

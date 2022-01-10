@@ -24,7 +24,6 @@ module.exports = (env, argv) => {
 
     config.plugins.push(new CopyWebpackPlugin({
         patterns: [
-            { from: 'fonts', to: 'fonts' },
             { from: 'locales', to: 'locales' }
         ]
     }));

@@ -21,10 +21,24 @@ package org.openremote.manager.setup.custom;
 
 import org.openremote.manager.setup.AbstractKeycloakSetup;
 import org.openremote.model.Container;
+import org.openremote.model.security.ClientRole;
+import org.openremote.model.security.Tenant;
 
 public class CustomKeycloakSetup extends AbstractKeycloakSetup {
 
     public CustomKeycloakSetup(Container container) {
         super(container);
+    }
+
+    @Override
+    public void onStart() throws Exception {
+        // Create custom realm
+        Tenant customTenant = createTenant("custom", "Custom", true);
+
+        // Create user(s) for custom realm
+        createUser("custom", "custom", "custom", "First", "Last", null, true, new ClientRole[] {
+            ClientRole.READ,
+            ClientRole.WRITE
+        });
     }
 }
