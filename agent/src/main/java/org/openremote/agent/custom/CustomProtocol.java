@@ -31,12 +31,15 @@ import java.util.logging.Logger;
 import static org.openremote.model.syslog.SyslogCategory.PROTOCOL;
 
 /**
- * A custom protocol that is used by the {@link CustomAgent}; there is a one-to-one mapping between an {@link CustomAgent}
- * {@link org.openremote.model.asset.Asset} and its' {@link org.openremote.model.asset.agent.Protocol}.
+ * A custom protocol that is used by the {@link CustomAgent}; there is a one-to-one mapping between an {@link
+ * CustomAgent} {@link org.openremote.model.asset.Asset} and its' {@link org.openremote.model.asset.agent.Protocol}.
+ * This example does nothing useful but is intended to show where protocol classes should be created.
  */
 public class CustomProtocol extends AbstractProtocol<CustomAgent, DefaultAgentLink> {
 
+    public static final String PROTOCOL_DISPLAY_NAME = "Custom";
     private static final Logger LOG = SyslogCategory.getLogger(PROTOCOL, CustomProtocol.class);
+    protected boolean running;
 
     public CustomProtocol(CustomAgent agent) {
         super(agent);
@@ -44,7 +47,7 @@ public class CustomProtocol extends AbstractProtocol<CustomAgent, DefaultAgentLi
 
     @Override
     protected void doStart(Container container) throws Exception {
-
+        running = true;
     }
 
     @Override
@@ -69,11 +72,11 @@ public class CustomProtocol extends AbstractProtocol<CustomAgent, DefaultAgentLi
 
     @Override
     public String getProtocolName() {
-        return null;
+        return PROTOCOL_DISPLAY_NAME;
     }
 
     @Override
     public String getProtocolInstanceUri() {
-        return null;
+        return "custom://" + agent.getOption();
     }
 }

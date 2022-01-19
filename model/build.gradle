@@ -1,11 +1,9 @@
-apply plugin: "java"
-apply plugin: "groovy"
+apply plugin: "java-library"
 
 dependencies {
-    compile project(":openremote:model")
+    api resolveProject(":model")
 }
 
-task installDist(type: Copy) {
-    from jar.outputs
-    into "${project(':deployment').buildDir}/image/manager/extensions"
+task installDist {
+    dependsOn jar
 }

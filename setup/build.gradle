@@ -1,18 +1,12 @@
-apply plugin: "java"
-apply plugin: "groovy"
+apply plugin: "java-library"
 
 dependencies {
-    compile resolveProject(":manager")
-    compile resolveProject(":model")
+    api project(":openremote:manager")
+    api project(":agent")
+    api project(":model")
+    api project(":manager")
 }
 
-task copyLibs(type: Copy) {
-    into libsDir
-    from configurations.compile
-}
-
-task installDist(type: Copy) {
-    dependsOn jar, copyLibs
-    from libsDir
-    into "${project(':deployment').buildDir}/image/manager/extensions"
+task installDist {
+    dependsOn jar
 }

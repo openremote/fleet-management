@@ -1,13 +1,14 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
-apply plugin: "java"
+apply plugin: "java-library"
 apply plugin: "groovy"
 
 dependencies {
-	compile project(":model")
-    compile project(":manager")
-    testCompile resolveProject(":test")
+    api project(":manager")
+    api project(":model")
+    api project(":agent")
+    api resolveProject(":test")
 }
 
 test {

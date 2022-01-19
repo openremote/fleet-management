@@ -25,6 +25,7 @@ import org.openremote.model.value.AttributeDescriptor;
 import org.openremote.model.value.ValueDescriptor;
 
 import javax.persistence.Entity;
+import java.util.Optional;
 
 /**
  * This is an example of a custom {@link Asset} type; this must be registered via an
@@ -58,4 +59,13 @@ public class CustomAsset extends Asset<CustomAsset> {
     public static final AttributeDescriptor<CustomValueType> CUSTOM_VALUE_TYPE_ATTRIBUTE_DESCRIPTOR = new AttributeDescriptor<>("customAttribute", CUSTOM_VALUE_TYPE_VALUE_DESCRIPTOR);
 
     public static final AssetDescriptor<CustomAsset> CUSTOM_ASSET_ASSET_DESCRIPTOR = new AssetDescriptor<>("brightness-auto", "00aaaa", CustomAsset.class);
+
+    public Optional<CustomValueType> getCustomAttribute() {
+        return getAttributes().getValue(CUSTOM_VALUE_TYPE_ATTRIBUTE_DESCRIPTOR);
+    }
+
+    public CustomAsset setCustomAttribute(CustomValueType value) {
+        getAttributes().getOrCreate(CUSTOM_VALUE_TYPE_ATTRIBUTE_DESCRIPTOR).setValue(value);
+        return this;
+    }
 }

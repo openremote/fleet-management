@@ -1,11 +1,13 @@
-task clean() {
-    doLast {
-        delete "build"
-    }
+apply plugin: "java-library"
+
+dependencies {
+    api project(":setup")
 }
 
+copyLibs.dependsOn (parent.getTasksByName('installDist', true).findAll {it.project != project})
+
 task installDist(type: Copy) {
-    mustRunAfter (parent.getTasksByName('installDist', true).findAll {it.project != project})
+    dependsOn copyLibs
     into "${buildDir}"
 
     into("image") {

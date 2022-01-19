@@ -1,18 +1,12 @@
-apply plugin: "java"
+apply plugin: "java-library"
 
 dependencies {
-    compileOnly resolveProject(":container")
-    compileOnly resolveProject(":manager")
-    compileOnly project(":model")
+    api resolveProject(":container")
+    api resolveProject(":manager")
+    api project(":agent")
+    api project(":model")
 }
 
-task copyLibs(type: Copy) {
-    into libsDir
-    from configurations.compile
-}
-
-task installDist(type: Copy) {
-    dependsOn jar, copyLibs
-    from libsDir
-    into "${project(':deployment').buildDir}/image/manager/extensions"
+task installDist {
+    dependsOn jar
 }

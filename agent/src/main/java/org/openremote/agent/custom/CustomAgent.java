@@ -23,8 +23,11 @@ import org.openremote.model.asset.Asset;
 import org.openremote.model.asset.agent.Agent;
 import org.openremote.model.asset.agent.AgentDescriptor;
 import org.openremote.model.asset.agent.DefaultAgentLink;
+import org.openremote.model.value.AttributeDescriptor;
+import org.openremote.model.value.ValueDescriptor;
 
 import javax.persistence.Entity;
+import java.util.Optional;
 
 /**
  * This is an example of a custom {@link Agent} type; this must be registered via an
@@ -42,6 +45,16 @@ import javax.persistence.Entity;
 @Entity
 public class CustomAgent extends Agent<CustomAgent, CustomProtocol, DefaultAgentLink> {
 
+    public enum Option {
+        ONE,
+        TWO,
+        THREE
+    };
+
+    public static final ValueDescriptor<Option> OPTION_VALUE_DESCRIPTOR = new ValueDescriptor<>("customAgentOption", Option.class);
+
+    public static final AttributeDescriptor<Option> OPTION_ATTRIBUTE_DESCRIPTOR = new AttributeDescriptor<>("option", OPTION_VALUE_DESCRIPTOR);
+
     public static final AgentDescriptor<CustomAgent, CustomProtocol, DefaultAgentLink> DESCRIPTOR = new AgentDescriptor<>(
         CustomAgent.class, CustomProtocol.class, DefaultAgentLink.class
     );
@@ -56,6 +69,15 @@ public class CustomAgent extends Agent<CustomAgent, CustomProtocol, DefaultAgent
     @Override
     public CustomProtocol getProtocolInstance() {
         return new CustomProtocol(this);
+    }
+
+    public Optional<Option> getOption() {
+        return getAttributes().getValue(OPTION_ATTRIBUTE_DESCRIPTOR);
+    }
+
+    public CustomAgent setOption(Option value) {
+        getAttributes().getOrCreate(OPTION_ATTRIBUTE_DESCRIPTOR).setValue(value);
+        return this;
     }
 }
 
