@@ -19,35 +19,21 @@
  */
 package org.openremote.manager.setup.custom;
 
-import org.openremote.manager.setup.EmptySetupTasks;
-import org.openremote.manager.setup.Setup;
 import org.openremote.model.Container;
+import org.openremote.model.setup.Setup;
+import org.openremote.model.setup.SetupTasks;
 
+import java.util.Arrays;
 import java.util.List;
 
-import static org.openremote.container.util.MapAccess.getString;
-
-public class CustomSetupTasks extends EmptySetupTasks {
-
-    public static final String DEPLOYMENT_TYPE = "DEPLOYMENT_TYPE";
-    public static final String DEPLOYMENT_TYPE_DEFAULT = "staging";
+public class CustomSetupTasks implements SetupTasks {
 
     @Override
-    public List<Setup> createTasks(Container container) {
-
-        String deploymentType = getString(container.getConfig(), DEPLOYMENT_TYPE, DEPLOYMENT_TYPE_DEFAULT);
-
-        // Essential to call super to perform keycloak setup
-        super.createTasks(container);
-
-        // Add custom Setup task implementations here
-        if ("staging".equals(deploymentType)) {
-            addTask(new CustomKeycloakSetup(container));
-            addTask(new CustomManagerSetup(container));
-        } else if ("production".equals(deploymentType)) {
-          // Specify production setup tasks
-        }
-
-        return getTasks();
+    public List<Setup> createTasks(Container container, String setupType, boolean keycloakEnabled) {
+        // Add custom Setup task implementations here with tasks optionally dependent on setupType
+        return Arrays.asList(
+            new CustomKeycloakSetup(container),
+            new CustomManagerSetup(container)
+        );
     }
 }

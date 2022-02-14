@@ -36,6 +36,7 @@ volumes:
   proxy-data:
   deployment-data:
   postgresql-data:
+  temp-data:
 
 services:
 
@@ -60,8 +61,8 @@ services:
       - proxy-data:/deployment
       - deployment-data:/data
     environment:
-      LE_EMAIL: ${EMAIL?EMAIL}
-      DOMAINNAME: ${DEPLOYMENT_HOST?DEPLOYMENT_HOST must be set}
+      LE_EMAIL: ${SETUP_EMAIL_TO?SETUP_EMAIL_TO must be set}
+      DOMAINNAME: ${HOST?HOST must be set}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
 
@@ -70,6 +71,7 @@ services:
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
+      - temp-data:/tmp
 
   keycloak:
     image: openremote/keycloak:${KEYCLOAK_VERSION:-16.0.0.0}
@@ -80,30 +82,33 @@ services:
     volumes:
       - deployment-data:/deployment
     environment:
-      KEYCLOAK_PASSWORD: ${PASSWORD:?PASSWORD must be set}
-      KEYCLOAK_FRONTEND_URL: https://${DEPLOYMENT_HOST?DEPLOYMENT_HOST must be set}/auth
+      KEYCLOAK_PASSWORD: ${SETUP_ADMIN_PASSWORD:?SETUP_ADMIN_PASSWORD must be set}
+      KEYCLOAK_FRONTEND_URL: https://${HOST?HOST must be set}/auth
 
   manager:
     image: openremote/manager:${MANAGER_VERSION?MANAGER_VERSION must be set}
     restart: always
     logging:
       options:
-        max-size: "1m"
+        max-size: "10m"
         max-file: "10"
     depends_on:
       keycloak:
         condition: service_healthy
     volumes:
+      - temp-data:/tmp
       - deployment-data:/deployment
       # Map data is stored local on host
       - /deployment.local:/deployment.local
     environment:
-      SETUP_ADMIN_PASSWORD: ${PASSWORD?PASSWORD must be set}
-      SETUP_EMAIL_HOST: #
-      SETUP_EMAIL_PORT: #
-      SETUP_EMAIL_USER: #
-      SETUP_EMAIL_PASSWORD: #
-      SETUP_EMAIL_FROM: no-reply@openremote.io
-      SETUP_EMAIL_FROM_KEYCLOAK: no-reply@openremote.io
-      SETUP_EMAIL_FROM_DEFAULT: admin@openremote.io
+      # Here are some typical environment variables you want to set
+      # see openremote/profile/deploy.yml for details
+      SETUP_ADMIN_PASSWORD: ${SETUP_ADMIN_PASSWORD?SETUP_ADMIN_PASSWORD must be set}
+      SETUP_TYPE: # Typical values to support are staging and production
+      SETUP_EMAIL_HOST:
+      SETUP_EMAIL_PORT:
+      SETUP_EMAIL_USER:
+      SETUP_EMAIL_PASSWORD:
+      SETUP_EMAIL_FROM:
+      SETUP_EMAIL_TO:
       #MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'

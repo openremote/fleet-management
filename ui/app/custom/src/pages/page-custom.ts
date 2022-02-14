@@ -1,10 +1,7 @@
-import {css, html, TemplateResult, unsafeCSS} from "lit";
-import {customElement, property, query} from "lit/decorators.js";
-
-import manager, {AssetModelUtil, Util} from "@openremote/core";
+import {css, html, TemplateResult} from "lit";
+import {customElement} from "lit/decorators.js";
 import {AppStateKeyed, Page, PageProvider} from "@openremote/or-app";
 import {EnhancedStore} from "@reduxjs/toolkit";
-import { Asset, AssetQuery, AttributeEvent, ReadAttributeEvent, SharedEvent} from "@openremote/model";
 
 export function pageCustomProvider(store: EnhancedStore<AppStateKeyed>): PageProvider<AppStateKeyed> {
     return {

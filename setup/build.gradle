@@ -1,7 +1,7 @@
 apply plugin: "java-library"
 
 dependencies {
-    api project(":openremote:manager")
+    api resolveProject(":manager")
     api project(":agent")
     api project(":model")
     api project(":manager")
