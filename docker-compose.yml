@@ -61,7 +61,7 @@ services:
       - proxy-data:/deployment
       - deployment-data:/data
     environment:
-      LE_EMAIL: ${SETUP_EMAIL_TO?SETUP_EMAIL_TO must be set}
+      LE_EMAIL: ${SETUP_EMAIL_ADMIN?SETUP_EMAIL_ADMIN must be set}
       DOMAINNAME: ${HOST?HOST must be set}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
@@ -110,5 +110,5 @@ services:
       SETUP_EMAIL_USER:
       SETUP_EMAIL_PASSWORD:
       SETUP_EMAIL_FROM:
-      SETUP_EMAIL_TO:
+      SETUP_EMAIL_ADMIN:
       #MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'
