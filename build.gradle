@@ -11,6 +11,15 @@ buildscript {
     }
 }
 
+task customTests {
+    afterEvaluate {
+        def testTask = tasks.findByPath(":test:test")
+        if (testTask != null) {
+            customTests.dependsOn testTask
+        }
+    }
+}
+
 allprojects {
     // Apply common project setup but exclude submodule, it has its own build.gradle
     if (!path.startsWith(":openremote")) {
