@@ -4,6 +4,21 @@ dependencies {
     api project(":setup")
 }
 
+task license {
+    doLast {
+        def toConcatenate = files("${project(":openremote").projectDir}/LICENSE.txt", "${rootDir}/LICENSE.txt")
+        def outputFileName = "${buildDir}/image/manager/app/LICENSE.txt"
+        def output = new File(outputFileName)
+        if (output.exists()) {
+            output.delete()
+        }
+        output.getParentFile().mkdirs()
+        output.createNewFile()
+        output.write('') // truncate output if needed
+        toConcatenate.each { f -> output << f.text }
+    }
+}
+
 task installDist(type: Copy) {
     dependsOn copyLibs
     dependsOn (parent.getTasksByName('installDist', true).findAll {
