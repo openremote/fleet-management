@@ -20,17 +20,21 @@ task license {
 }
 
 task installDist(type: Copy) {
-    dependsOn copyLibs
     dependsOn (parent.getTasksByName('installDist', true).findAll {
         // Don't create circular dependency or depend on built in openremote submodule apps
         it.project != project && !it.project.path.startsWith(":openremote:ui:app")
     })
-    into "${buildDir}"
+
+    into("$buildDir")
+
+    from "Dockerfile"
 
     into("image") {
         from projectDir
         exclude "build.gradle", "Dockerfile", "build", "**/*.mbtiles", "src", "**/*.md", ".gitignore"
     }
 
-    from("Dockerfile")
+    into("image/manager/extensions") {
+        from getDeploymentJars()
+    }
 }

@@ -84,6 +84,13 @@ jobs:
 
           secrets = json.loads(os.getenv('secret'))
           for key, value in secrets.items():
+              if key.startswith("_"):
+                environment = os.getenv('environment').upper()
+                prefix = "_" + environment + "_"
+                if not key.startswith(prefix):
+                  continue
+                else:
+                  key = key.lstrip(prefix)
               print(f"Setting {key} ...")
               lines = len(value.split("\n"))
               if lines > 1:
@@ -94,6 +101,7 @@ jobs:
                   os.system(f"echo '{key}={value}' >> $GITHUB_ENV")
         env:
           secret: ${{ toJSON(secrets) }}
+          environment: ${{ github.event.inputs.environment }}
 
       - name: Determine host name
         id: host-name
@@ -266,13 +274,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-          
+
       - name: Grant execute permission for gradlew and make image-cache
         if: ${{ env.MANAGER_BUILD == 'true' || env.DEPLOYMENT_BUILD == 'true' }}
         run: |
           chmod +x gradlew
           mkdir -p ~/image-cache
-          
+
       - name: Get yarn cache directory path
         if: ${{ env.MANAGER_BUILD == 'true' || env.DEPLOYMENT_BUILD == 'true' }}
         id: yarn-cache-dir-path
@@ -287,7 +295,7 @@ jobs:
           key: ${{ runner.os }}-yarn---${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn---
-            
+
       - name: Do code build
         if: ${{ env.MANAGER_BUILD == 'true' || env.DEPLOYMENT_BUILD == 'true' }}
         run: |
@@ -295,7 +303,18 @@ jobs:
             ./gradlew installDist
           elif [ $DEPLOYMENT_BUILD == 'true' ]; then
             ./gradlew -p deployment installDist
+            echo "--------------------------------------------"
+            echo "Deployment image files:"
+            echo ""
+            find ./deployment/build/image
+            echo ""
+            echo "--------------------------------------------"
           fi
+
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        with:
+          limit-access-to-users: richturner
 
       - name: set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -312,13 +331,13 @@ jobs:
       - name: Build and save manager image
         if: ${{ env.MANAGER_BUILD == 'true' }}
         run: |
-          docker build --build-arg GIT_COMMIT=$MANAGER_VERSION --platform $PLATFORM -t openremote/manager:$MANAGER_VERSION $MANAGER_PATH
+          docker build --load --build-arg GIT_COMMIT=$MANAGER_VERSION --platform $PLATFORM -t openremote/manager:$MANAGER_VERSION $MANAGER_PATH
           docker save openremote/manager:$MANAGER_VERSION | gzip > temp/manager.tar.gz
 
       - name: Build and save deployment image
         if: ${{ env.DEPLOYMENT_BUILD == 'true' }}
         run: |
-          docker build --build-arg GIT_COMMIT=$DEPLOYMENT_VERSION --platform $PLATFORM -t openremote/deployment:$DEPLOYMENT_VERSION $DEPLOYMENT_PATH
+          docker build --load --build-arg GIT_COMMIT=$DEPLOYMENT_VERSION --platform $PLATFORM -t openremote/deployment:$DEPLOYMENT_VERSION $DEPLOYMENT_PATH
           docker save openremote/deployment:$DEPLOYMENT_VERSION | gzip > temp/deployment.tar.gz
 
       - name: Copy files to host
@@ -385,7 +404,7 @@ jobs:
             
             # Start the stack
             docker-compose -f temp/docker-compose.yml -p or up -d
-        
+
       - name: Wait for up to 5 mins for manager webserver to be running
         run: |
           echo "Waiting for manager web server https://$HOST..."
