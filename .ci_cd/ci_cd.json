@@ -1,9 +1,0 @@
-{
-	"managerDockerPush": {		
-		"develop": {
-			"deploy": {
-				"environment": "staging"
-			}
-		}
-	}
-}
