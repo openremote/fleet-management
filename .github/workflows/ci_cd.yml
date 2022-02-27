@@ -1,3 +1,4 @@
+# This just references the CI/CD workflow in the main OpenRemote repo
 name: CI/CD
 
 on:
@@ -42,7 +43,6 @@ on:
 # Un-comment to monitor manager docker image tags for changes and trigger a redeploy
 #   schedule:
 #     - cron: '*/17 * * * *'
-  
       
 jobs:
   call-main-repo:
