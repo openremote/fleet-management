@@ -40,7 +40,7 @@ on:
         description: 'Repo branch or commit SHA to use'
 
   schedule:
-    - cron: '15 * * * *'
+    - cron: '*/7 * * * *'
   
       
 jobs:
