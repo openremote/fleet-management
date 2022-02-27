@@ -1,0 +1,52 @@
+name: CI/CD
+
+on:
+  # Push excluding tags and workflow changes
+  push:
+    branches:
+        - '**'
+    tags-ignore:
+      - '*.*'
+    paths-ignore:
+      - '.github/**'
+      - '.ci_cd/**'
+      - '**/*.md'
+
+  # When a release is published
+  release:
+    types: [published]    
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      ENVIRONMENT:
+        description: 'Environment to use (if any)'
+      MANAGER_TAG:
+        description: 'Manager docker tag to pull'
+      CLEAN_INSTALL:
+        description: 'Delete data before starting'
+        type: boolean
+      HOST:
+        description: 'Host to deploy to'
+      SSH_USER:
+        description: 'SSH Username'
+      SSH_PORT:
+        description: 'SSH port'
+      SSH_PASSWORD:
+        description: 'SSH password'
+      SETUP_ADMIN_PASSWORD:
+        description: 'Admin password override'
+      COMMIT:
+        description: 'Repo branch or commit SHA to use'
+
+  schedule:
+    - cron: '15 * * * *'
+  
+      
+jobs:
+  call-main-repo:
+    uses: openremote/openremote/.github/workflows/ci_cd.yml@feature/workflows
+    with:
+      INPUTS: ${{ toJSON(github.event.inputs) }}
+    secrets:
+      SECRETS: ${{ toJSON(secrets) }}
