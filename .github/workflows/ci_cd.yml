@@ -39,8 +39,9 @@ on:
       COMMIT:
         description: 'Repo branch or commit SHA to use'
 
-  schedule:
-    - cron: '*/7 * * * *'
+# Un-comment to monitor manager docker image tags for changes and trigger a redeploy
+#   schedule:
+#     - cron: '*/17 * * * *'
   
       
 jobs:
