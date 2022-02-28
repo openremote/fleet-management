@@ -2,7 +2,10 @@
 As well as the below information please see the [Manager endpoints and file paths](https://github.com/openremote/openremote/wiki/Architecture:-Manager-endpoints-and-file-paths) wiki.
 
 ### Custom provisioning files (`provisioning/`)
-As an alternative to writing `java` setup code you can also provide `json` representations of Assets and consoleAppConfig which will be automatically deserialized and added to the system when doing a clean install.
+As an alternative to writing `java` setup code you can also provide `json` representations of Assets which will be automatically deserialized and added to the system when doing a clean install.
+
+### Console App Configurations (`consoleappconfig/`)
+Console app configurations that can be loaded by Android and iOS consoles.
 
 ### Custom App Files (`app/`)
 This `app` directory is used as the `$CUSTOM_APP_DOCROOT` and can be used to store any custom static content; the Manager UI also checks the `/manager_config.json` path for a custom Manager UI configuration `json` file.
