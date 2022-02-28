@@ -27,25 +27,26 @@ on:
       CLEAN_INSTALL:
         description: 'Delete data before starting'
         type: boolean
+      COMMIT:
+        description: 'Repo branch or commit SHA to checkout'
       HOST:
         description: 'Host to deploy to'
-      SSH_USER:
-        description: 'SSH Username'
       SSH_PORT:
         description: 'SSH port'
+      SSH_USER:
+        description: 'SSH Username'
       SSH_PASSWORD:
         description: 'SSH password'
       SETUP_ADMIN_PASSWORD:
         description: 'Admin password override'
-      COMMIT:
-        description: 'Repo branch or commit SHA to use'
 
 # Un-comment to monitor manager docker image tags for changes and trigger a redeploy
 #   schedule:
 #     - cron: '*/17 * * * *'
-      
+
 jobs:
   call-main-repo:
+    name: CI/CD
     uses: openremote/openremote/.github/workflows/ci_cd.yml@feature/workflows
     with:
       INPUTS: ${{ toJSON(github.event.inputs) }}
