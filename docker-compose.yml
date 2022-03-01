@@ -48,7 +48,7 @@ services:
       - deployment-data:/deployment
 
   proxy:
-    image: openremote/proxy:latest${PROXY_VERSION:-2.5.0.1}
+    image: openremote/proxy:${PROXY_VERSION:-2.5.0.1}
     restart: always
     depends_on:
       manager:
