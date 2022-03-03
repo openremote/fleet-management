@@ -27,6 +27,13 @@ console/iOS/Pods
 manager/.factorypath/
 Pods/
 node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # Specific files and logs
 openremote.log
