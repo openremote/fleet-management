@@ -29,7 +29,7 @@ on:
         type: boolean
       COMMIT:
         description: 'Repo branch or commit SHA to checkout'
-      HOST:
+      OR_HOST:
         description: 'Host to deploy to'
       SSH_PORT:
         description: 'SSH port'
@@ -37,10 +37,10 @@ on:
         description: 'SSH Username'
       SSH_PASSWORD:
         description: 'SSH password'
-      SETUP_ADMIN_PASSWORD:
+      OR_ADMIN_PASSWORD:
         description: 'Admin password override'
 
-# Un-comment to monitor manager docker image tags for changes and trigger a redeploy
+# Un-comment to monitor manager docker image tags for changes and trigger a redeploy when they change (see .ci_cd/README.md)
 #   schedule:
 #     - cron: '*/17 * * * *'
 

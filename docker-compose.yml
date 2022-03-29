@@ -4,13 +4,11 @@
 # to expose customisations to the manager and keycloak images. To run this profile you need to specify the following
 # environment variables:
 #
-#    EMAIL - Admin email address
-#    PASSWORD - Initial admin user password
-#    DEPLOYMENT_HOST - Domain hostname of where this instance will be exposed (localhost or public domain)
+#    OR_ADMIN_PASSWORD - Initial admin user password
+#    OR_HOST - FQDN hostname of where this instance will be exposed (localhost, IP address or public domain)
 #    DEPLOYMENT_VERSION - Tag to use for deployment image (must match the tag used when building the deployment image)
-#    MANAGER_VERSION - Tag to use for manager image (must match the tag used when building the manager image)
 #
-# Please see profile/deploy.yml for configuration details for each service.
+# Please see openremote/profile/deploy.yml for configuration details for each service.
 #
 # To perform updates, build code and prepare Docker images:
 #
@@ -26,7 +24,7 @@
 #  docker volume rm custom_deployment-data
 #  Do the following volume rm command if you want a clean install (wipe all existing data)
 #  docker volume rm custom_postgresql-data
-#  PASSWORD=secret DEPLOYMENT_HOST=my.domain.com docker-compose -p custom up -d
+#  OR_ADMIN_PASSWORD=secret OR_HOST=my.domain.com docker-compose -p custom up -d
 #
 # All data is kept in volumes. Create a backup of the volumes to preserve data.
 #
@@ -48,7 +46,7 @@ services:
       - deployment-data:/deployment
 
   proxy:
-    image: openremote/proxy:${PROXY_VERSION:-2.5.0.1}
+    image: openremote/proxy:${PROXY_VERSION:-2.5.0.3}
     restart: always
     depends_on:
       manager:
@@ -61,13 +59,13 @@ services:
       - proxy-data:/deployment
       - deployment-data:/data
     environment:
-      LE_EMAIL: ${SETUP_EMAIL_ADMIN?SETUP_EMAIL_ADMIN must be set}
-      DOMAINNAME: ${HOST?HOST must be set}
+      LE_EMAIL: ${OR_EMAIL_ADMIN:-}
+      DOMAINNAME: ${OR_HOST?OR_HOST must be set}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
 
   postgresql:
-    image: openremote/postgresql:${POSTGRESQL_VERSION:-14.1.0.0}
+    image: openremote/postgresql:${POSTGRESQL_VERSION:-14.1.0.1}
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
@@ -82,11 +80,11 @@ services:
     volumes:
       - deployment-data:/deployment
     environment:
-      KEYCLOAK_PASSWORD: ${SETUP_ADMIN_PASSWORD:?SETUP_ADMIN_PASSWORD must be set}
-      KEYCLOAK_FRONTEND_URL: https://${HOST?HOST must be set}/auth
+      KEYCLOAK_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
+      KEYCLOAK_FRONTEND_URL: https://${OR_HOST?OR_HOST must be set}/auth
 
   manager:
-    image: openremote/manager:${MANAGER_VERSION?MANAGER_VERSION must be set}
+    image: openremote/manager:${MANAGER_VERSION:-latest}
     restart: always
     logging:
       options:
@@ -103,12 +101,14 @@ services:
     environment:
       # Here are some typical environment variables you want to set
       # see openremote/profile/deploy.yml for details
-      SETUP_ADMIN_PASSWORD: ${SETUP_ADMIN_PASSWORD?SETUP_ADMIN_PASSWORD must be set}
-      SETUP_TYPE: # Typical values to support are staging and production
-      SETUP_EMAIL_HOST:
-      SETUP_EMAIL_PORT:
-      SETUP_EMAIL_USER:
-      SETUP_EMAIL_PASSWORD:
-      SETUP_EMAIL_FROM:
-      SETUP_EMAIL_ADMIN:
-      #MAP_TILES_PATH: '/deployment.local/map/mapdata.mbtiles'
+      OR_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD?OR_ADMIN_PASSWORD must be set}
+      OR_SETUP_TYPE: # Typical values to support are staging and production
+      OR_SETUP_RUN_ON_RESTART:
+      OR_EMAIL_HOST:
+      OR_EMAIL_USER:
+      OR_EMAIL_PASSWORD:
+      OR_EMAIL_FROM:
+      OR_EMAIL_ADMIN:
+      OR_HOST: ${OR_HOST?OR_HOST must be set}
+      OR_DEV_MODE: ${OR_DEV_MODE:-false}
+      #MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
