@@ -5,7 +5,7 @@
 # environment variables:
 #
 #    OR_ADMIN_PASSWORD - Initial admin user password
-#    OR_HOST - FQDN hostname of where this instance will be exposed (localhost, IP address or public domain)
+#    OR_HOSTNAME - FQDN hostname of where this instance will be exposed (localhost, IP address or public domain)
 #    DEPLOYMENT_VERSION - Tag to use for deployment image (must match the tag used when building the deployment image)
 #
 # Please see openremote/profile/deploy.yml for configuration details for each service.
@@ -24,7 +24,7 @@
 #  docker volume rm custom_deployment-data
 #  Do the following volume rm command if you want a clean install (wipe all existing data)
 #  docker volume rm custom_postgresql-data
-#  OR_ADMIN_PASSWORD=secret OR_HOST=my.domain.com docker-compose -p custom up -d
+#  OR_ADMIN_PASSWORD=secret OR_HOSTNAME=my.domain.com docker-compose -p custom up -d
 #
 # All data is kept in volumes. Create a backup of the volumes to preserve data.
 #
@@ -36,6 +36,15 @@ volumes:
   postgresql-data:
   temp-data:
 
+x-logging: &awslogs
+  logging:
+    driver: awslogs
+    options:
+      awslogs-region: ${AWS_REGION:-eu-west-1}
+      awslogs-group: ${OR_HOSTNAME}
+      awslogs-create-group: 'true'
+      tag: "{{.Name}}/{{.ID}}"
+
 services:
 
   # This service will only populate an empty volume on startup and then exit.
@@ -46,7 +55,7 @@ services:
       - deployment-data:/deployment
 
   proxy:
-    image: openremote/proxy:${PROXY_VERSION:-2.5.0.3}
+    image: openremote/proxy:${PROXY_VERSION:-latest}
     restart: always
     depends_on:
       manager:
@@ -59,20 +68,22 @@ services:
       - proxy-data:/deployment
       - deployment-data:/data
     environment:
-      LE_EMAIL: ${OR_EMAIL_ADMIN:-}
-      DOMAINNAME: ${OR_HOST?OR_HOST must be set}
+      LE_EMAIL: ${OR_EMAIL_ADMIN}
+      DOMAINNAME: ${OR_HOSTNAME?OR_HOSTNAME must be set}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
+    <<: *awslogs
 
   postgresql:
-    image: openremote/postgresql:${POSTGRESQL_VERSION:-14.1.0.1}
+    image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
       - temp-data:/tmp
+    <<: *awslogs
 
   keycloak:
-    image: openremote/keycloak:${KEYCLOAK_VERSION:-16.0.0.0}
+    image: openremote/keycloak:${KEYCLOAK_VERSION:-latest}
     restart: always
     depends_on:
       postgresql:
@@ -81,7 +92,8 @@ services:
       - deployment-data:/deployment
     environment:
       KEYCLOAK_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
-      KEYCLOAK_FRONTEND_URL: https://${OR_HOST?OR_HOST must be set}/auth
+      KEYCLOAK_FRONTEND_URL: https://${OR_HOSTNAME?OR_HOSTNAME must be set}/auth
+    <<: *awslogs
 
   manager:
     image: openremote/manager:${MANAGER_VERSION:-latest}
@@ -109,6 +121,10 @@ services:
       OR_EMAIL_PASSWORD:
       OR_EMAIL_FROM:
       OR_EMAIL_ADMIN:
-      OR_HOST: ${OR_HOST?OR_HOST must be set}
+      OR_HOSTNAME: ${OR_HOSTNAME?OR_HOSTNAME must be set}
+      OR_ADDITIONAL_HOSTNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
+      OR_SSL_PORT: ${OR_SSL_PORT:-443}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
+      KEYCLOAK_FRONTEND_URL: https://${OR_HOSTNAME:-localhost}/auth
       #MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
+    <<: *awslogs

@@ -29,7 +29,7 @@ on:
         type: boolean
       COMMIT:
         description: 'Repo branch or commit SHA to checkout'
-      OR_HOST:
+      OR_HOSTNAME:
         description: 'Host to deploy to'
       SSH_PORT:
         description: 'SSH port'
