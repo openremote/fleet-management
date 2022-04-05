@@ -31,12 +31,6 @@ on:
         description: 'Repo branch or commit SHA to checkout'
       OR_HOSTNAME:
         description: 'Host to deploy to'
-      SSH_PORT:
-        description: 'SSH port'
-      SSH_USER:
-        description: 'SSH Username'
-      SSH_PASSWORD:
-        description: 'SSH password'
       OR_ADMIN_PASSWORD:
         description: 'Admin password override'
 
