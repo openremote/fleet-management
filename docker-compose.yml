@@ -70,6 +70,7 @@ services:
     environment:
       LE_EMAIL: ${OR_EMAIL_ADMIN}
       DOMAINNAME: ${OR_HOSTNAME?OR_HOSTNAME must be set}
+      DOMAINNAMES: $[OR_ADDITIONAL_HOSTNAMES:-}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
     <<: *awslogs
@@ -108,7 +109,7 @@ services:
     volumes:
       - temp-data:/tmp
       - deployment-data:/deployment
-      # Map data is stored local on host
+      # Map data should be stored local on host
       - /deployment.local:/deployment.local
     environment:
       # Here are some typical environment variables you want to set
