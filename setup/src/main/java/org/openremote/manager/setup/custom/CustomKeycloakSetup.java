@@ -23,11 +23,24 @@ import org.openremote.manager.setup.AbstractKeycloakSetup;
 import org.openremote.model.Container;
 import org.openremote.model.security.ClientRole;
 import org.openremote.model.security.Tenant;
+import org.openremote.model.util.TextUtil;
+
+import static org.openremote.container.util.MapAccess.getString;
 
 public class CustomKeycloakSetup extends AbstractKeycloakSetup {
 
-    public CustomKeycloakSetup(Container container) {
+    public static final String CUSTOM_USER_PASSWORD = "CUSTOM_USER_PASSWORD";
+    public static final String CUSTOM_USER_PASSWORD_DEFAULT = "custom";
+    protected final String customUserPassword;
+
+    public CustomKeycloakSetup(Container container, boolean isProduction) {
         super(container);
+
+        customUserPassword = getString(container.getConfig(), CUSTOM_USER_PASSWORD, CUSTOM_USER_PASSWORD_DEFAULT);
+
+        if (isProduction && TextUtil.isNullOrEmpty(customUserPassword)) {
+            throw new IllegalStateException("Custom user password must be supplied in production");
+        }
     }
 
     @Override
@@ -36,7 +49,7 @@ public class CustomKeycloakSetup extends AbstractKeycloakSetup {
         Tenant customTenant = createTenant("custom", "Custom", true);
 
         // Create user(s) for custom realm
-        createUser("custom", "custom", "custom", "First", "Last", null, true, new ClientRole[] {
+        createUser("custom", "custom", customUserPassword, "First", "Last", null, true, new ClientRole[] {
             ClientRole.READ,
             ClientRole.WRITE
         });

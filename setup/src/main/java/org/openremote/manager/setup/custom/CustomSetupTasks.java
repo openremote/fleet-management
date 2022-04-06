@@ -28,11 +28,16 @@ import java.util.List;
 
 public class CustomSetupTasks implements SetupTasks {
 
+    public static final String PRODUCTION = "production";
+
     @Override
     public List<Setup> createTasks(Container container, String setupType, boolean keycloakEnabled) {
+
+        boolean isProduction = PRODUCTION.equalsIgnoreCase(setupType);
+
         // Add custom Setup task implementations here with tasks optionally dependent on setupType
         return Arrays.asList(
-            new CustomKeycloakSetup(container),
+            new CustomKeycloakSetup(container, isProduction),
             new CustomManagerSetup(container)
         );
     }
