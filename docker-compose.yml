@@ -128,5 +128,5 @@ services:
       OR_SSL_PORT: ${OR_SSL_PORT:-443}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
       KEYCLOAK_FRONTEND_URL: https://${OR_HOSTNAME:-localhost}/auth
-      #MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
+      #OR_MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
     <<: *awslogs
