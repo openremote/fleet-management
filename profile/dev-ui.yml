@@ -50,8 +50,8 @@ services:
       - temp-data:/tmp
       - ../deployment/build/image:/deployment
     environment:
-      SETUP_WIPE_CLEAN_INSTALL: true
-      EXTERNAL_URL: http://localhost:8080
-      DEV_MODE: true
+      OR_SETUP_RUN_ON_RESTART: ${OR_SETUP_RUN_ON_RESTART:-true}
+      OR_DEV_MODE: ${OR_DEV_MODE:-true}
+      KEYCLOAK_FRONTEND_URL:
     ports:
       - "8080:8080"
