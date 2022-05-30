@@ -22,7 +22,7 @@ package org.openremote.manager.setup.custom;
 import org.openremote.manager.setup.AbstractKeycloakSetup;
 import org.openremote.model.Container;
 import org.openremote.model.security.ClientRole;
-import org.openremote.model.security.Tenant;
+import org.openremote.model.security.Realm;
 import org.openremote.model.util.TextUtil;
 
 import static org.openremote.container.util.MapAccess.getString;
@@ -46,7 +46,7 @@ public class CustomKeycloakSetup extends AbstractKeycloakSetup {
     @Override
     public void onStart() throws Exception {
         // Create custom realm
-        Tenant customTenant = createTenant("custom", "Custom", true);
+        Realm customRealm = createRealm("custom", "Custom", true);
 
         // Create user(s) for custom realm
         createUser("custom", "custom", customUserPassword, "First", "Last", null, true, new ClientRole[] {
