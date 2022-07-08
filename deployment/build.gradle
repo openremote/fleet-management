@@ -1,9 +1,3 @@
-apply plugin: "java-library"
-
-dependencies {
-    api project(":setup")
-}
-
 task license {
     doLast {
         def toConcatenate = files("${project(":openremote").projectDir}/LICENSE.txt", "${rootDir}/LICENSE.txt")
@@ -35,6 +29,6 @@ task installDist(type: Copy) {
     }
 
     into("image/manager/extensions") {
-        from getDeploymentJars()
+        from getDeploymentJars(project(":setup"))
     }
 }
