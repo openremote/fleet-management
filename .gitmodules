@@ -2,4 +2,4 @@
 	path = openremote
 	url = git@github.com:openremote/openremote.git
 	branch = master
-  update = rebase
+    update = rebase
