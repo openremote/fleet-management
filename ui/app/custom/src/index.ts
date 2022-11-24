@@ -3,14 +3,15 @@ import {combineReducers, configureStore} from "@reduxjs/toolkit";
 import "@openremote/or-app";
 import {AnyAction, appReducer, AppStateKeyed, HeaderConfig, HeaderItem, OrApp, PageProvider, RealmAppConfig} from "@openremote/or-app";
 import {headerItemAccount, headerItemLanguage, headerItemLogout, headerItemMap, headerItemAssets} from "@openremote/manager/headers";
-import {pageAssetsProvider} from "@openremote/manager/pages/page-assets";
+import {pageAssetsReducer, pageAssetsProvider} from "@openremote/manager/pages/page-assets";
 import {pageMapReducer, pageMapProvider} from "@openremote/manager/pages/page-map";
 import "./pages/page-custom";
 import {pageCustomProvider} from "./pages/page-custom";
 
 const rootReducer = combineReducers({
     app: appReducer,
-    map: pageMapReducer
+    map: pageMapReducer,
+    assets: pageAssetsReducer
 });
 
 type RootState = ReturnType<typeof rootReducer>;
