@@ -35,6 +35,13 @@ volumes:
   deployment-data:
   postgresql-data:
   temp-data:
+# Add an NFS volume to the stack
+#  efs-data:
+#    driver: local
+#    driver_opts:
+#      type: nfs
+#      o: "addr=${EFS_DNS?DNS must be set to mount NFS volume},rw,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
+#      device: ":/"
 
 x-logging: &awslogs
   logging:
@@ -110,8 +117,9 @@ services:
     volumes:
       - temp-data:/tmp
       - deployment-data:/deployment
-      # Map data should be stored local on host
-      - /deployment.local:/deployment.local
+      # Map data should be accessed from a volume mount
+      # 1). Host filesystem - /deployment.local:/deployment.local
+      # 2) NFS/EFS network mount - efs-data:/efs
     environment:
       # Here are some typical environment variables you want to set
       # see openremote/profile/deploy.yml for details
@@ -129,4 +137,5 @@ services:
       OR_SSL_PORT: ${OR_SSL_PORT:--1}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
       #OR_MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
+      #OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
     <<: *awslogs
