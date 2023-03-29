@@ -34,7 +34,8 @@ volumes:
   proxy-data:
   deployment-data:
   postgresql-data:
-  temp-data:
+  manager-data:
+
 # Add an NFS volume to the stack
 #  efs-data:
 #    driver: local
@@ -87,7 +88,7 @@ services:
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
-      - temp-data:/tmp
+      - manager-data:/storage
     <<: *awslogs
 
   keycloak:
@@ -115,7 +116,7 @@ services:
       keycloak:
         condition: service_healthy
     volumes:
-      - temp-data:/tmp
+      - manager-data:/storage
       - deployment-data:/deployment
       # Map data should be accessed from a volume mount
       # 1). Host filesystem - /deployment.local:/deployment.local
@@ -136,6 +137,6 @@ services:
       OR_ADDITIONAL_HOSTNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
       OR_SSL_PORT: ${OR_SSL_PORT:--1}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
-      #OR_MAP_TILES_PATH: '/deployment.local/efs/mapdata.mbtiles'
+      OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
       #OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
     <<: *awslogs
