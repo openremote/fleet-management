@@ -19,8 +19,8 @@
  */
 package org.openremote.model.custom;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
 /**
  * This is an example custom JAX-RS endpoint; this will be compiled and made available in the typescript model as well
