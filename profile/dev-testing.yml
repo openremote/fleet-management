@@ -32,7 +32,7 @@ services:
       file: ../openremote/profile/deploy.yml
       service: postgresql
     volumes:
-      - ../tmp:/storage
+      - ../openremote/tmp:/storage
     # Access directly if needed on localhost
     ports:
       - "5432:5432"
