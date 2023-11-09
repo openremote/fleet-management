@@ -1,0 +1,11 @@
+apply plugin: "java-library"
+
+dependencies {
+    api project(":agent")
+    api project(":model")
+    api project(":manager")
+}
+
+task installDist {
+    dependsOn jar
+}

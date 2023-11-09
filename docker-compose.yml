@@ -1,0 +1,138 @@
+# OpenRemote v3
+#
+# Profile for deploying the custom stack; uses deployment-data named volume
+# to expose customisations to the manager and keycloak images. To run this profile you need to specify the following
+# environment variables:
+#
+#    OR_ADMIN_PASSWORD - Initial admin user password
+#    OR_HOSTNAME - FQDN hostname of where this instance will be exposed (localhost, IP address or public domain)
+#    DEPLOYMENT_VERSION - Tag to use for deployment image (must match the tag used when building the deployment image)
+#
+# Please see openremote/profile/deploy.yml for configuration details for each service.
+#
+# To perform updates, build code and prepare Docker images:
+#
+#   ./gradlew clean installDist
+#
+# Then recreate deployment image:
+#
+#  DEPLOYMENT_VERSION=$(git rev-parse --short HEAD)
+#  MANAGER_VERSION=$(cd openremote; git rev-parse --short HEAD; cd ..)
+#  docker build -t openremote/manager:$MANAGER_VERSION ./openremote/manager/build/install/manager/
+#  docker build -t openremote/custom-deployment:$DEPLOYMENT_VERSION ./deployment/build/
+#  docker-compose -p custom down
+#  docker volume rm custom_deployment-data
+#  Do the following volume rm command if you want a clean install (wipe all existing data)
+#  docker volume rm custom_postgresql-data
+#  OR_ADMIN_PASSWORD=secret OR_HOSTNAME=my.domain.com docker-compose -p custom up -d
+#
+# All data is kept in volumes. Create a backup of the volumes to preserve data.
+#
+version: '2.4'
+
+volumes:
+  proxy-data:
+  deployment-data:
+  postgresql-data:
+  manager-data:
+
+# Add an NFS volume to the stack
+#  efs-data:
+#    driver: local
+#    driver_opts:
+#      type: nfs
+#      o: "addr=${EFS_DNS?DNS must be set to mount NFS volume},rw,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
+#      device: ":/"
+
+x-logging: &awslogs
+  logging:
+    driver: awslogs
+    options:
+      awslogs-region: ${AWS_REGION:-eu-west-1}
+      awslogs-group: ${OR_HOSTNAME}
+      awslogs-create-group: 'true'
+      tag: "{{.Name}}/{{.ID}}"
+
+services:
+
+  # This service will only populate an empty volume on startup and then exit.
+  # If the volume already contains data, it exits immediately.
+  deployment:
+    image: openremote/deployment:${DEPLOYMENT_VERSION?DEPLOYMENT_VERSION must be set}
+    volumes:
+      - deployment-data:/deployment
+
+  proxy:
+    image: openremote/proxy:${PROXY_VERSION:-latest}
+    restart: always
+    depends_on:
+      manager:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8883:8883"
+    volumes:
+      - proxy-data:/deployment
+      - deployment-data:/data
+    environment:
+      LE_EMAIL: ${OR_EMAIL_ADMIN}
+      DOMAINNAME: ${OR_HOSTNAME?OR_HOSTNAME must be set}
+      DOMAINNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
+      # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
+      #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
+    <<: *awslogs
+
+  postgresql:
+    image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
+    restart: always
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+      - manager-data:/storage
+    <<: *awslogs
+
+  keycloak:
+    image: openremote/keycloak:${KEYCLOAK_VERSION:-latest}
+    restart: always
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    volumes:
+      - deployment-data:/deployment
+    environment:
+      KEYCLOAK_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
+      KC_HOSTNAME: ${OR_HOSTNAME:-localhost}
+      KC_HOSTNAME_PORT: ${OR_SSL_PORT:--1}
+    <<: *awslogs
+
+  manager:
+    image: openremote/manager:${MANAGER_VERSION:-latest}
+    restart: always
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - manager-data:/storage
+      - deployment-data:/deployment
+      # Map data should be accessed from a volume mount
+      # 1). Host filesystem - /deployment.local:/deployment.local
+      # 2) NFS/EFS network mount - efs-data:/efs
+    environment:
+      # Here are some typical environment variables you want to set
+      # see openremote/profile/deploy.yml for details
+      OR_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD?OR_ADMIN_PASSWORD must be set}
+      OR_SETUP_TYPE: # Typical values to support are staging and production
+      OR_SETUP_RUN_ON_RESTART:
+      OR_EMAIL_HOST:
+      OR_EMAIL_USER:
+      OR_EMAIL_PASSWORD:
+      OR_EMAIL_X_HEADERS:
+      OR_EMAIL_FROM:
+      OR_EMAIL_ADMIN:
+      OR_HOSTNAME: ${OR_HOSTNAME?OR_HOSTNAME must be set}
+      OR_ADDITIONAL_HOSTNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
+      OR_SSL_PORT: ${OR_SSL_PORT:--1}
+      OR_DEV_MODE: ${OR_DEV_MODE:-false}
+      OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
+      #OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
+    <<: *awslogs

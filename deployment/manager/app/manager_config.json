@@ -1,0 +1,13 @@
+{
+  "loadLocales": true,
+  "realms": {
+    "default": {
+      "appTitle": "Custom Project",
+      "styles": ":host > * {--or-app-color2: #F9F9F9; --or-app-color3: #22211f; --or-app-color4: #0c4da2; --or-app-color5: #CCCCCC;}",
+      "logo": "/images/logo.png",
+      "logoMobile": "/images/logo-mobile.png",
+      "favicon": "/images/favicon.ico",
+      "language": "en"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+# This just references the CI/CD workflow in the main OpenRemote repo
+name: CI/CD
+
+on:
+  # Push excluding tags and workflow changes
+  push:
+    branches:
+        - '**'
+    tags-ignore:
+      - '*.*'
+    paths-ignore:
+      - '.github/**'
+      - '.ci_cd/**'
+      - '**/*.md'
+
+  # When a release is published
+  release:
+    types: [published]    
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      ENVIRONMENT:
+        description: 'Environment to use (if any)'
+      MANAGER_TAG:
+        description: 'Manager docker tag to pull'
+      CLEAN_INSTALL:
+        description: 'Delete data before starting'
+        type: boolean
+      COMMIT:
+        description: 'Repo branch or commit SHA to checkout'
+
+# Un-comment to monitor manager docker image tags for changes and trigger a redeploy when they change (see .ci_cd/README.md)
+#   schedule:
+#     - cron: '*/17 * * * *'
+
+jobs:
+  call-main-repo:
+    name: CI/CD
+    uses: openremote/openremote/.github/workflows/ci_cd.yml@master
+    with:
+      INPUTS: ${{ toJSON(github.event.inputs) }}
+    secrets:
+      SECRETS: ${{ toJSON(secrets) }}

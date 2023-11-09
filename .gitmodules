@@ -1,0 +1,5 @@
+[submodule "openremote"]
+    path = openremote
+    url = https://github.com/openremote/openremote.git
+    branch = master
+    update = rebase
