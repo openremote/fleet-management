@@ -20,7 +20,11 @@
 package org.openremote.model.custom;
 
 import org.openremote.model.AssetModelProvider;
+import org.openremote.model.ModelDescriptor;
+import org.openremote.model.ModelDescriptors;
+import org.openremote.model.asset.Asset;
 
+@ModelDescriptors({@ModelDescriptor(assetType = Asset.class, provider = CustomValueTypes.class)})
 public class CustomAssetModelProvider implements AssetModelProvider {
 
     @Override

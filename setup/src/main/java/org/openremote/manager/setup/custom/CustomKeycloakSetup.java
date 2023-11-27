@@ -20,38 +20,26 @@
 package org.openremote.manager.setup.custom;
 
 import org.openremote.manager.setup.AbstractKeycloakSetup;
+import org.openremote.model.Constants;
 import org.openremote.model.Container;
-import org.openremote.model.security.ClientRole;
-import org.openremote.model.security.Realm;
-import org.openremote.model.util.TextUtil;
-
-import static org.openremote.container.util.MapAccess.getString;
+import org.openremote.model.security.User;
 
 public class CustomKeycloakSetup extends AbstractKeycloakSetup {
 
-    public static final String CUSTOM_USER_PASSWORD = "CUSTOM_USER_PASSWORD";
-    public static final String CUSTOM_USER_PASSWORD_DEFAULT = "custom";
-    protected final String customUserPassword;
+    protected User serviceUser;
 
     public CustomKeycloakSetup(Container container, boolean isProduction) {
         super(container);
-
-        customUserPassword = getString(container.getConfig(), CUSTOM_USER_PASSWORD, CUSTOM_USER_PASSWORD_DEFAULT);
-
-        if (isProduction && TextUtil.isNullOrEmpty(customUserPassword)) {
-            throw new IllegalStateException("Custom user password must be supplied in production");
-        }
     }
 
     @Override
     public void onStart() throws Exception {
-        // Create custom realm
-        Realm customRealm = createRealm("custom", "Custom", true);
 
-        // Create user(s) for custom realm
-        createUser("custom", "custom", customUserPassword, "First", "Last", null, true, new ClientRole[] {
-            ClientRole.READ,
-            ClientRole.WRITE
-        });
+        serviceUser = new User()
+            .setServiceAccount(true)
+            .setEnabled(true)
+            .setUsername("serviceUser");
+
+        serviceUser = keycloakProvider.createUpdateUser(Constants.MASTER_REALM, serviceUser, null, true);
     }
 }

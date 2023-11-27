@@ -11,7 +11,7 @@ apply plugin: "groovy"
 dependencies {
     api project(":manager")
     api project(":model")
-    api project(":agent")
+    api project(":setup")
     testImplementation(testFixtures(resolveProject(":test")))
 }
 

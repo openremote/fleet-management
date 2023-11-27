@@ -34,7 +34,6 @@ public class CustomManagerSetup extends ManagerSetup {
     public void onStart() throws Exception {
         super.onStart();
 
-        ThingAsset thing = new ThingAsset("Custom Thing").setRealm(Constants.MASTER_REALM);
-        thing = assetStorageService.merge(thing);
+        // Create assets on clean startup here
     }
 }
