@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.openremote.model.Constants;
+import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
 import org.openremote.model.attribute.MetaItem;
 import org.openremote.model.attribute.MetaMap;
+import org.openremote.model.custom.CarAsset;
 import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
@@ -54,23 +56,19 @@ public class State {
     //TODO: Move any function from here; it's a POJO.
     //TODO: Figure out what the parameters: pr, alt, ang, sat, sp, and evt do
     // and implement their functionality (I can guess but I want to know exactly).
-    public AttributeMap getAttributes(Map<Integer, TeltonikaParameter> params, AttributeMap additionalAttributes, Logger logger){
+    public AttributeMap getAttributes(Map<String, TeltonikaParameter> params, AttributeMap additionalAttributes, Logger logger){
         AttributeMap attributes = new AttributeMap();
         for (Map.Entry<String,Object> entry : reported.entrySet()){
-            //Check if parameter is a number value, pointing to a TeltonikaParameter
             String entryId = entry.getKey();
-            int parsedEntryId;
-            try {
-                parsedEntryId = Integer.parseInt(entryId);
-            }catch (Exception e){
-                continue;
-            }
             //If the Teltonika Parameter HashMap doesn't contain the requested AVL ID, continue:
 
-            if (!params.containsKey(parsedEntryId)) continue;
+            if (!params.containsKey(entryId)) {
+                logger.warning("Could not parse retrieved parameter with AVL ID "+ entryId);
+                continue;
+            }
 
             //Retrieve the parameter data
-            TeltonikaParameter parameter = params.get(Integer.valueOf(entry.getKey()));
+            TeltonikaParameter parameter = params.get(entryId);
 
             //Create the MetaItem Map
             MetaMap metaMap = new MetaMap();
@@ -177,7 +175,7 @@ public class State {
                         constraintsMeta.setValue(constraints);
 
                         //TODO: Fix this, constraints for some reason are not being applied
-//                        metaMap.add(constraintsMeta);
+                        metaMap.add(constraintsMeta);
                     }
                 }catch (Exception e){
                     logger.severe(parameter.propertyName + "Failed constraints");
@@ -196,7 +194,7 @@ public class State {
                 throw e;
             }
             //Use the MetaMap to create an AttributeDescriptor
-            AttributeDescriptor<?> attributeDescriptor = new AttributeDescriptor<>(parameter.propertyId.toString(), attributeType, metaMap);
+            AttributeDescriptor<?> attributeDescriptor = new AttributeDescriptor<>(entryId, attributeType, metaMap);
 
 
 
@@ -205,14 +203,12 @@ public class State {
             // Add it to the AttributeMap
             attributes.addOrReplace(generatedAttribute);
         }
-        //Special parameter definitions without being defined in the AVL Parameter List, thanks Teltonika
-
         //latlng are the latitude-longitude coordinates, also check if it's 0,0, if it is, don't update.
         if (reported.containsKey("latlng") && !Objects.equals(reported.get("latlng"), "0.000000,0.000000")){
             try{
                 String latlngString = reported.get("latlng").toString();
                 GeoJSONPoint point = ParseLatLngToGeoJSONObject(latlngString);
-                Attribute<?> attr = new Attribute<>("location", ValueType.GEO_JSON_POINT, point);
+                Attribute<?> attr = new Attribute<>(Asset.LOCATION, point);
 
                 attributes.add(attr);
             }catch (Exception e){
@@ -227,7 +223,7 @@ public class State {
             try{
                 long unixTimestampMillis = Long.parseLong(reported.get("ts").toString());
                 Timestamp deviceTimestamp = Timestamp.from(Instant.ofEpochMilli(unixTimestampMillis));
-                attributes.add(new Attribute<>("lastContact", ValueType.DATE_AND_TIME, deviceTimestamp).setTimestamp(deviceTimestamp.getTime()));
+                attributes.add(new Attribute<>(CarAsset.LAST_CONTACT, deviceTimestamp, deviceTimestamp.getTime()));
 
 
                 //Update all affected attribute timestamps
