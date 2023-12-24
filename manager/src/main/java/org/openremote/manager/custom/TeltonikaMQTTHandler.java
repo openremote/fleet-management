@@ -19,13 +19,13 @@ import org.openremote.model.Container;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.asset.AssetFilter;
 import org.openremote.model.attribute.*;
-import org.openremote.model.custom.AssetStateDuration;
-import org.openremote.model.custom.CarAsset;
-import org.openremote.model.custom.CustomValueTypes;
+import org.openremote.model.custom.*;
 import org.openremote.model.datapoint.AssetDatapoint;
+import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.query.AssetQuery;
 import org.openremote.model.query.filter.AttributePredicate;
 import org.openremote.model.query.filter.NumberPredicate;
+import org.openremote.model.query.filter.ParentPredicate;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.IMEIValidator;
 import org.openremote.model.teltonika.TeltonikaDataPayload;
@@ -33,6 +33,7 @@ import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.teltonika.TeltonikaResponsePayload;
 import org.openremote.model.value.AttributeDescriptor;
 import org.openremote.model.value.ValueType;
+import scala.collection.immutable.Stream;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -113,6 +114,18 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             identityProvider = (ManagerKeycloakIdentityProvider) identityService.getIdentityProvider();
         }
 
+        List<Asset<?>> assets = assetStorageService.findAll(new AssetQuery().types(TeltonikaModelConfigurationAsset.class));
+
+        if(assets.isEmpty()) {
+            getLogger().severe("No Teltonika configuration assets found! Creating defaults...");
+
+            initializeConfigurationAssets();
+
+            getLogger().info("Created default configuration");
+        }
+
+
+
         clientEventService.addInternalSubscription(
             AttributeEvent.class,
             null,
@@ -161,7 +174,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 Optional<Attribute<String>> imei;
                 String imeiString;
                 try {
-                    imei = asset.getAttribute("IMEI");
+                    imei = asset.getAttribute(CarAsset.IMEI);
                     if(imei.isEmpty()) throw new Exception();
                     if(imei.get().getValue().isEmpty()) throw new Exception();
                     imeiString = imei.get().getValue().get();
@@ -337,6 +350,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 //Check state of Teltonika AVL ID 250 for FMC003, "Trip".
 //            Optional<Attribute<?>> sessionAttr = assetChangedTripState(new AttributeRef(asset.getId(), "250"));
                 // We want the state where the attribute 250 (Trip) is set to true.
+                // TODO: Figure out a way to create this through the UI.
                 AttributePredicate pred = new AttributePredicate("250", new NumberPredicate((double) 1, AssetQuery.Operator.EQUALS));
 
                 try{
@@ -640,7 +654,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 //
 //        attributes.forEach(attribute -> attribute.setTimestamp(packetTimestamp));
 
-        String imei = asset.getAttribute("IMEI").toString();
+        String imei = asset.getAttribute(CarAsset.IMEI).toString();
 
         getLogger().info("Updating CarAsset with IMEI "+imei);
         //OBD details: Prot:6,VIN:WVGZZZ1TZBW068095,TM:15,CNT:19,ST:DATA REQUESTING,P1:0xBE3EA813,P2:0xA005B011,P3:0xFED00400,P4:0x0,MIL:0,DTC:0,ID3,Hdr:7E8,Phy:0
@@ -668,6 +682,36 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 //            LOG.info("Publishing to client inbound queue: " + attribute.getName());
             assetProcessingService.sendAttributeEvent(attributeEvent);
         }));
+    }
+
+    private void initializeConfigurationAssets(){
+        // Create initial configuration
+        TeltonikaConfigurationAsset rootConfig = new TeltonikaConfigurationAsset("Teltonika Device Configuration");
+        TeltonikaModelConfigurationAsset fmc003 = new TeltonikaModelConfigurationAsset("FMC003");
+
+        rootConfig.setEnabled(true);
+        rootConfig.setWhitelist(new String[0]);
+        rootConfig.setCheckForImei(false);
+
+        fmc003.setModelNumber("FMC003");
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            TeltonikaParameter[] params = mapper.readValue(getParameterFileString(), TeltonikaParameter[].class);
+            fmc003.setParameterData(params);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Could not parse Teltonika Parameter JSON file");
+        }
+
+        rootConfig.setRealm("master");
+        fmc003.setRealm("master");
+
+         rootConfig = assetStorageService.merge(rootConfig);
+
+         fmc003.setParent(rootConfig);
+
+         fmc003 = assetStorageService.merge(fmc003);
+
     }
 }
 
