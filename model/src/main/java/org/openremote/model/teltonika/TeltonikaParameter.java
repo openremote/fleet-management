@@ -69,6 +69,8 @@ public class TeltonikaParameter implements Serializable {
         this.parameterGroup = parameterGroup;
     }
 
+    public TeltonikaParameter(){}
+
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
