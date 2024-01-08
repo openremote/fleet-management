@@ -55,6 +55,20 @@ public class TeltonikaParameter implements Serializable {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
 
+    public TeltonikaParameter(Integer propertyId, String propertyName, String bytes, String type, String min, String max, String multiplier, String units, String description, String hwSupport, String parameterGroup) {
+        this.propertyId = propertyId;
+        this.propertyName = propertyName;
+        this.bytes = bytes;
+        this.type = type;
+        this.min = min;
+        this.max = max;
+        this.multiplier = multiplier;
+        this.units = units;
+        this.description = description;
+        this.hwSupport = hwSupport;
+        this.parameterGroup = parameterGroup;
+    }
+
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {

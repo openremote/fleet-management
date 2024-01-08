@@ -555,7 +555,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     private AttributeMap getAttributesFromPayload(String payloadContent) throws JsonProcessingException {
 
 
-        HashMap<String, TeltonikaParameter> params = new HashMap<>();
+
         ObjectMapper mapper = new ObjectMapper();
         try {
             // Parse file with Parameter details
@@ -564,7 +564,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             // being the value
             TeltonikaConfiguration config = getConfig();
 
-            params = config.getParameterMap().get(config.getDefaultModelNumber());
+            CustomValueTypes.TeltonikaParameterMap params = config.getParameterMap().get(config.getDefaultModelNumber());
 
             getLogger().info("Parsed "+params.size()+" Teltonika Parameters");
 
