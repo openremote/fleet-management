@@ -19,6 +19,7 @@ import org.openremote.model.asset.agent.ConnectionStatus
 import org.openremote.model.attribute.Attribute
 import org.openremote.model.attribute.AttributeEvent
 import org.openremote.model.attribute.AttributeRef
+import org.openremote.model.custom.CarAsset
 import org.openremote.model.teltonika.TeltonikaParameter
 import org.openremote.model.util.ValueUtil
 import org.openremote.model.value.MetaItemType
@@ -325,7 +326,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         conditions.eventually {
             asset = assetStorageService.find(UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI()))
             assert asset != null;
-            assert asset.getAttribute("IMEI").get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
+            assert asset.getAttribute(CarAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
             //Make sure that it parsed the attributes, since there is an issue of parsing the FMC003.json file
             assert asset.getAttributes().size() > 5;
 
@@ -411,7 +412,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         conditions.eventually {
             asset = assetStorageService.find(UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI()))
             assert asset != null;
-            assert asset.getAttribute("IMEI").get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
+            assert asset.getAttribute(CarAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
         }
 
         when: "the send message attribute is created and then updated"

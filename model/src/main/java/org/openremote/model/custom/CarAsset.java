@@ -14,12 +14,12 @@ public class CarAsset extends Asset<CarAsset> {
     public static final AttributeDescriptor<String> IMEI = new AttributeDescriptor<>("IMEI", ValueType.TEXT);
     public static final AttributeDescriptor<Date> LAST_CONTACT = new AttributeDescriptor<>("lastContact", ValueType.DATE_AND_TIME);
     public static final AttributeDescriptor<String> MAKE_AND_MODEL = new AttributeDescriptor<>("makeAndModel", ValueType.TEXT).withOptional(true);
+    public static final AttributeDescriptor<String> MODEL_NUMBER = new AttributeDescriptor<>("modelNumber", ValueType.TEXT).withOptional(true);
     public static final AttributeDescriptor<Integer> MODEL_YEAR = new AttributeDescriptor<>("modelYear", ValueType.INTEGER).withOptional(true);
-    /**
-     * If Rich sees this, sorry for the American spelling!
-     */
     public static final AttributeDescriptor<ColourRGB> COLOR = new AttributeDescriptor<>("color", ValueType.COLOUR_RGB).withOptional(true);
     public static final AttributeDescriptor<String> LICENSE_PLATE = new AttributeDescriptor<>("licensePlate", ValueType.TEXT).withOptional(true);
+
+    // Figure out a way to use the colour parameter for the color of the car on the map
     public static final AssetDescriptor<CarAsset> DESCRIPTOR = new AssetDescriptor<>("car", null, CarAsset.class);
 
 
@@ -42,5 +42,10 @@ public class CarAsset extends Asset<CarAsset> {
     public Optional<ColourRGB> getColor() {
         return getAttributes().getValue(COLOR);
     }
+    public Optional<String> getModelNumber(){return getAttributes().getValue(MODEL_NUMBER);}
 
+    public CarAsset setModelNumber(String value){
+        getAttributes().getOrCreate(MODEL_NUMBER).setValue(value);
+        return this;
+    }
 }

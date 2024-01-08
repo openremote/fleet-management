@@ -1,6 +1,7 @@
 
 package org.openremote.model.teltonika;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "hwSupport",
         "parameterGroup"
 })
-public class TeltonikaParameter {
+public class TeltonikaParameter implements Serializable {
 
     @JsonProperty("propertyIdInAvlPacket")
     public Integer propertyId;
