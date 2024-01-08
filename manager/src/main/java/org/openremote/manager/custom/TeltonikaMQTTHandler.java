@@ -43,6 +43,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.openremote.model.syslog.SyslogCategory.API;
 import static org.openremote.model.value.MetaItemType.*;
@@ -555,7 +556,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     private AttributeMap getAttributesFromPayload(String payloadContent) throws JsonProcessingException {
 
 
-
+        HashMap<String, TeltonikaParameter> params = new HashMap<>();
         ObjectMapper mapper = new ObjectMapper();
         try {
             // Parse file with Parameter details
@@ -564,7 +565,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             // being the value
             TeltonikaConfiguration config = getConfig();
 
-            CustomValueTypes.TeltonikaParameterMap params = config.getParameterMap().get(config.getDefaultModelNumber());
+            //Cast keys to String
+            params = config.getParameterMap().get(config.getDefaultModelNumber()).entrySet().stream().collect(Collectors.toMap(
+                    Object::toString,
+                    Map.Entry::getValue,
+                    (existing, replacement) -> existing,
+                    HashMap::new
+            ));
 
             getLogger().info("Parsed "+params.size()+" Teltonika Parameters");
 
