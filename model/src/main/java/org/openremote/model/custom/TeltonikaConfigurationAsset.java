@@ -12,6 +12,7 @@ public class TeltonikaConfigurationAsset extends Asset<TeltonikaConfigurationAss
     public static final AttributeDescriptor<String[]> WHITELIST = new AttributeDescriptor<>("deviceIMEIWhitelist", ValueType.TEXT.asArray()).withOptional(true);
     public static final AttributeDescriptor<Boolean> ENABLED = new AttributeDescriptor<>("Enabled", ValueType.BOOLEAN);
     public static final AttributeDescriptor<Boolean> CHECK_FOR_IMEI = new AttributeDescriptor<>("CheckForValidIMEI", ValueType.BOOLEAN);
+    public static final AttributeDescriptor<String> DEFAULT_MODEL_NUMBER = new AttributeDescriptor<>("defaultModelNumber", ValueType.TEXT);
 
     public static final AssetDescriptor<TeltonikaConfigurationAsset> DESCRIPTOR = new AssetDescriptor<>("gear", null, TeltonikaConfigurationAsset.class);
 
@@ -36,6 +37,11 @@ public class TeltonikaConfigurationAsset extends Asset<TeltonikaConfigurationAss
 
     public TeltonikaConfigurationAsset setCheckForImei(boolean enabled) {
         getAttributes().getOrCreate(CHECK_FOR_IMEI).setValue(enabled);
+        return this;
+    }
+
+    public TeltonikaConfigurationAsset setDefaultModelNumber(String value) {
+        getAttributes().getOrCreate(DEFAULT_MODEL_NUMBER).setValue(value);
         return this;
     }
 }
