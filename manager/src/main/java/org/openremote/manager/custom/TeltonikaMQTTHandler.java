@@ -29,6 +29,7 @@ import org.openremote.model.query.filter.RealmPredicate;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.*;
 import org.openremote.model.value.AttributeDescriptor;
+import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueType;
 
 import java.io.IOException;
@@ -453,12 +454,14 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                     Optional<Attribute<?>> sessionAttr = assetChangedTripState(prevValue, newValue, pred, ref);
 
                     if (sessionAttr.isPresent()) {
+                        getLogger().warning("New AssetStateDuration");
                         Attribute<?> session = sessionAttr.get();
                         session.addOrReplaceMeta(
                             new MetaItem<>(STORE_DATA_POINTS, true),
                             new MetaItem<>(RULE_STATE, true),
                             new MetaItem<>(READ_ONLY, true)
                         );
+                        // Maybe set this to session.endTime?
                         attributes.get(CarAsset.LAST_CONTACT).ifPresent(date -> {
                             session.setTimestamp(date.getValue().get().getTime());
                         });
@@ -505,6 +508,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             .setRealm(realm)
                 .setModelNumber(getConfig().getDefaultModelNumber())
             .setId(newDeviceId);
+        testAsset.getAttribute(CarAsset.LOCATION).ifPresentOrElse(attr -> attr.addMeta(new MetaItem<>(STORE_DATA_POINTS, true)), () -> {getLogger().warning("Couldn't find CarAsset.LOCATION");});
 
         testAsset.getAttributes().add(new Attribute<>(CarAsset.IMEI, newDeviceImei));
 
@@ -529,6 +533,18 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         updateAsset(testAsset, attributes, topic, connection);
     }
 
+    public class TeltonikaParameterId {
+        public String customId;
+        public int id;
+        TeltonikaParameterId(String customId){
+            this.customId = customId;
+        }
+
+        TeltonikaParameterId(int id){
+            this.id = id;
+        }
+    }
+
     /**
      * Returns list of attributes depending on the Teltonika JSON Payload.
      * Uses the logic and results from parsing the Teltonika Parameter IDs.
@@ -537,7 +553,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * @return Map of {@link Attribute}s to be assigned to the {@link Asset}.
      */
     private AttributeMap getAttributesFromPayload(String payloadContent) throws JsonProcessingException {
-        HashMap<Integer, TeltonikaParameter> params = new HashMap<>();
+
+
+        HashMap<String, TeltonikaParameter> params = new HashMap<>();
         ObjectMapper mapper = new ObjectMapper();
         try {
             // Parse file with Parameter details
@@ -554,6 +572,19 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             getLogger().warning("Could not parse the Teltonika Parameter file");
             getLogger().info(e.toString());
         }
+
+        // Add the custom parameters (pr, alt, ang, sat, sp, evt)
+        Map<String, TeltonikaParameter> customParams = Map.of(
+            "pr", new TeltonikaParameter(-1, "Priority", String.valueOf(1), "Unsigned", String.valueOf(0), String.valueOf(4), String.valueOf(1), "-", "0: Low - 1: High - 2: Panic", "all", "Permanent I/O Elements"),
+            "alt", new TeltonikaParameter(-1, "Altitude", "2", "Signed", "-1000", "+3000", "1", "m", "meters above sea level", "all", "Permanent I/O Elements"),
+            "ang", new TeltonikaParameter(-1, "Angle", "2", "Signed", "-360", "+460", "1", "deg", "degrees from north pole", "all", "Permanent I/O Elements"),
+            "sat", new TeltonikaParameter(-1, "Satellites", "1", "Unsigned", "0", "1000", "1", "-", "number of visible satellites", "all", "Permanent I/O Elements"),
+            "sp", new TeltonikaParameter(-1, "Speed", "2", "Signed", "0", "1000", "1", "km/h", "speed calculated from satellites", "all", "Permanent I/O Elements"),
+            "evt", new TeltonikaParameter(-1, "Event Triggered", "2", "Signed", "1", "10000", "1", "-", "Parameter ID which generated this payload", "all", "Permanent I/O Elements")
+
+        );
+        params.putAll(customParams);
+
         //Parameters parsed, time to understand the payload
         TeltonikaDataPayload payload;
         try {
@@ -623,6 +654,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         }
 
         // Grab all datapoints (To be replaced by AssetDatapointValueQuery)
+        // For optimization: Maybe pull the datapoints from the endTime of the previous AssetStateDuration.
+
         List<AssetDatapoint> valueDatapoints = AssetDatapointService.getDatapoints(ref);
         ArrayList<AssetDatapoint> list = new ArrayList<>(valueDatapoints);
 
@@ -688,6 +721,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             new Timestamp(StateChangeAssetDatapoint.getTimestamp()),
             new Timestamp(previousValue.getTimestamp().get())
         ));
+
+        tripAttr.addMeta(
+                new MetaItem<>(STORE_DATA_POINTS, true),
+                new MetaItem<>(RULE_STATE, true),
+                new MetaItem<>(READ_ONLY, true)
+        );
+
 
         return Optional.of(tripAttr);
     }
