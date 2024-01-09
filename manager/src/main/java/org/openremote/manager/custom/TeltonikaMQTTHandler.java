@@ -21,6 +21,7 @@ import org.openremote.model.asset.AssetFilter;
 import org.openremote.model.attribute.*;
 import org.openremote.model.custom.*;
 import org.openremote.model.datapoint.AssetDatapoint;
+import org.openremote.model.datapoint.ValueDatapoint;
 import org.openremote.model.query.AssetQuery;
 import org.openremote.model.query.filter.AttributePredicate;
 import org.openremote.model.query.filter.NumberPredicate;
@@ -663,8 +664,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         // Grab all datapoints (To be replaced by AssetDatapointValueQuery)
         // For optimization: Maybe pull the datapoints from the endTime of the previous AssetStateDuration.
 
-        List<AssetDatapoint> valueDatapoints = AssetDatapointService.getDatapoints(ref);
-        ArrayList<AssetDatapoint> list = new ArrayList<>(valueDatapoints);
+        ArrayList<ValueDatapoint<?>> list = new ArrayList<>(AssetDatapointService.getDatapoints(ref));
 
         // If there are no historical data found, add some first
         if(list.isEmpty()) return Optional.empty();
@@ -674,14 +674,14 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         //Find the first datapoint that passes the negated predicate
 
-        AssetDatapoint StateChangeAssetDatapoint = null;
+        ValueDatapoint<?> StateChangeAssetDatapoint = null;
 
         try {
             for (int i = 0; i < list.size()-1; i++) {
                 // Not using Object.equals, but Datapoint.equals
 
-                AssetDatapoint currentDp = list.get(i);
-                AssetDatapoint theVeryPreviousDp = list.get(i+1);
+                ValueDatapoint<?> currentDp = list.get(i);
+                ValueDatapoint<?> theVeryPreviousDp = list.get(i+1);
 
                 //            So, if the currentDp passes the predicate,
                 boolean currentDpTest = pred.value.asPredicate(timerService::getCurrentTimeMillis).test(currentDp.getValue());
