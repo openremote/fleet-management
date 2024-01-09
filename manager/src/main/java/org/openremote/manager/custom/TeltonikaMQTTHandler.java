@@ -566,7 +566,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
             //Cast keys to String
             params = config.getParameterMap().get(config.getDefaultModelNumber()).entrySet().stream().collect(Collectors.toMap(
-                    Object::toString,
+                    kvp -> kvp.getKey().toString(),
                     Map.Entry::getValue,
                     (existing, replacement) -> existing,
                     HashMap::new
