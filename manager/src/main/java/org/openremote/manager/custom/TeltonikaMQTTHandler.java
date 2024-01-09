@@ -20,7 +20,6 @@ import org.openremote.model.asset.Asset;
 import org.openremote.model.asset.AssetFilter;
 import org.openremote.model.attribute.*;
 import org.openremote.model.custom.*;
-import org.openremote.model.datapoint.AssetDatapoint;
 import org.openremote.model.datapoint.ValueDatapoint;
 import org.openremote.model.query.AssetQuery;
 import org.openremote.model.query.filter.AttributePredicate;
@@ -30,7 +29,6 @@ import org.openremote.model.query.filter.RealmPredicate;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.*;
 import org.openremote.model.value.AttributeDescriptor;
-import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueType;
 
 import java.io.IOException;
@@ -664,7 +662,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         // Grab all datapoints (To be replaced by AssetDatapointValueQuery)
         // For optimization: Maybe pull the datapoints from the endTime of the previous AssetStateDuration.
 
-        ArrayList<ValueDatapoint<?>> list = new ArrayList<>(AssetDatapointService.getDatapoints(ref));
+        ArrayList<ValueDatapoint> list = new ArrayList<>(AssetDatapointService.getDatapoints(ref));
 
         // If there are no historical data found, add some first
         if(list.isEmpty()) return Optional.empty();
