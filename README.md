@@ -4,7 +4,6 @@ This repository contains the OpenRemote custom project template that contains fu
 
 Please look at the wiki for the tutorial on how to set up your ownfleet management system, and the Developer Guide to understand the inner workings of the fleet management implementation.
 
-![Teltonika Telematics Logo](https://wiki.teltonika-networks.com/images/8/8e/TELTONIKA-VEHICLE-TELEMATICS_logo_BLUE_PNG.png)
 
 # Custom Project Format
 
