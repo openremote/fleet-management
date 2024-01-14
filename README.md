@@ -1,6 +1,6 @@
 # Welcome to OpenRemote's Fleet Management Repository!
 
-This repository contains the OpenRemote custom project template that contains full support for fleet management features, like location tracking and session tracking, and also the industry-first complete, automatic data recognition from any Teltonika Telematics device model.
+This repository contains the OpenRemote custom project that contains full support for fleet management features, like location tracking and session tracking, and also the industry-first **complete, automatic data recognition** from any Teltonika Telematics device model.
 
 Please look at the wiki for the tutorial on how to set up your ownfleet management system, and the Developer Guide to understand the inner workings of the fleet management implementation.
 
