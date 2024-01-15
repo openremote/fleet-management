@@ -13,6 +13,7 @@ import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueType;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,7 +67,7 @@ public class TeltonikaModelConfigurationAsset extends Asset<TeltonikaModelConfig
         Optional<Attribute<CustomValueTypes.TeltonikaParameterMap>> map = getAttributes().get(PARAMETER_MAP);
 
         return map.flatMap(Attribute::getValue)
-                .orElse(null); // or provide a default value other than null, if appropriate
+                .orElse(new CustomValueTypes.TeltonikaParameterMap()); // or provide a default value other than null, if appropriate
     }
 
 }
