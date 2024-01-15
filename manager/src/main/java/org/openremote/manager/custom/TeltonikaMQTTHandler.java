@@ -22,10 +22,7 @@ import org.openremote.model.attribute.*;
 import org.openremote.model.custom.*;
 import org.openremote.model.datapoint.ValueDatapoint;
 import org.openremote.model.query.AssetQuery;
-import org.openremote.model.query.filter.AttributePredicate;
-import org.openremote.model.query.filter.NumberPredicate;
-import org.openremote.model.query.filter.ParentPredicate;
-import org.openremote.model.query.filter.RealmPredicate;
+import org.openremote.model.query.filter.*;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.*;
 import org.openremote.model.value.AttributeDescriptor;
@@ -438,6 +435,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 //            Optional<Attribute<?>> sessionAttr = assetChangedTripState(new AttributeRef(asset.getId(), "250"));
                 // We want the state where the attribute 250 (Trip) is set to true.
                 // TODO: Figure out a way to create this through the UI.
+                //Any Class that implements `ValuePredicate` can be used here.
                 AttributePredicate pred = new AttributePredicate("250", new NumberPredicate((double) 1, AssetQuery.Operator.EQUALS));
 
                 try{
@@ -451,7 +449,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                     Attribute<?> prevValue = asset.getAttributes().get("250").get();
                     Attribute<?> newValue = attributes.get("250").get();
                     AttributeRef ref = new AttributeRef(asset.getId(), "250");
-                    Optional<Attribute<?>> sessionAttr = assetChangedTripState(prevValue, newValue, pred, ref);
+                    Optional<Attribute<?>> sessionAttr = assetChangedTripState(prevValue, newValue, pred.value, ref);
 
                     if (sessionAttr.isPresent()) {
                         getLogger().warning("New AssetStateDuration");
@@ -637,7 +635,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * @return An Optional Attribute of type AssetStateDuration that represents the Duration for which the predicate returned true.
      */
     //TODO: Change this to only use an AttributeRef and a Predicate.
-    private Optional<Attribute<?>> assetChangedTripState(Attribute<?> previousValue, Attribute<?> newValue, AttributePredicate pred, AttributeRef ref) {
+    private Optional<Attribute<?>> assetChangedTripState(Attribute<?> previousValue, Attribute<?> newValue, ValuePredicate pred, AttributeRef ref) {
         //We will first check if the predicate fails for the new value, and then check if the predicate is true for the previous value.
         //In that way, we know that the state change happened between the new and previous values.
 
@@ -650,8 +648,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         }
 
         //TODO: Understand what happens with negate(), does it change states to the object itself?
-        boolean newValueTest =      pred.value.asPredicate(timerService::getCurrentTimeMillis).test(newValue        .getValue().get());
-        boolean previousValueTest = pred.value.asPredicate(timerService::getCurrentTimeMillis).test(previousValue   .getValue().get());
+        boolean newValueTest =      pred.asPredicate(timerService::getCurrentTimeMillis).test(newValue        .getValue().get());
+        boolean previousValueTest = pred.asPredicate(timerService::getCurrentTimeMillis).test(previousValue   .getValue().get());
         //If the predicate fails, then no changes need to happen.
 
         // newValue is not 1, previousValue == 1
@@ -682,10 +680,10 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 ValueDatapoint<?> theVeryPreviousDp = list.get(i+1);
 
                 //            So, if the currentDp passes the predicate,
-                boolean currentDpTest = pred.value.asPredicate(timerService::getCurrentTimeMillis).test(currentDp.getValue());
+                boolean currentDpTest = pred.asPredicate(timerService::getCurrentTimeMillis).test(currentDp.getValue());
                 //            and if the very previous one (NEXT one in the array and PREVIOUS in the time dimension)
                 //            FAILS the predicate,
-                boolean previousDpTest = pred.value.asPredicate(timerService::getCurrentTimeMillis).test(theVeryPreviousDp.getValue());
+                boolean previousDpTest = pred.asPredicate(timerService::getCurrentTimeMillis).test(theVeryPreviousDp.getValue());
                 //            A state change happened where the state we are looking for was turned on.
                 //            We want the currentDp.
 
@@ -697,7 +695,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             }
 
             if (StateChangeAssetDatapoint != null){
-                if (!pred.value.asPredicate(timerService::getCurrentTimeMillis).test(StateChangeAssetDatapoint.getValue())){
+                if (!pred.asPredicate(timerService::getCurrentTimeMillis).test(StateChangeAssetDatapoint.getValue())){
                     throw new Exception("Found state change datapoint failed predicate");
                 }
             }else{
