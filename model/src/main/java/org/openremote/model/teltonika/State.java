@@ -14,6 +14,8 @@ import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -26,7 +28,7 @@ import static org.openremote.model.value.MetaItemType.*;
 @JsonPropertyOrder({
         "reported"
 })
-public class State {
+public class State implements Serializable {
 
 //    public ReportedState reportedState;
     @JsonProperty("reported")
