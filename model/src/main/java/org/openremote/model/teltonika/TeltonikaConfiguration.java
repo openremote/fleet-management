@@ -1,8 +1,10 @@
 package org.openremote.model.teltonika;
 
+import org.openremote.model.attribute.Attribute;
 import org.openremote.model.custom.CustomValueTypes;
 import org.openremote.model.custom.TeltonikaConfigurationAsset;
 import org.openremote.model.custom.TeltonikaModelConfigurationAsset;
+import org.openremote.model.value.AttributeDescriptor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,5 +71,11 @@ public class TeltonikaConfiguration {
 
     public HashMap<String, CustomValueTypes.TeltonikaParameterMap> getParameterMap() {
         return parameterMap;
+    }
+    public Attribute<String> getCommandAttribute(){
+        return getMasterAsset().getAttribute(TeltonikaConfigurationAsset.COMMAND).get();
+    }
+    public Attribute<String> getResponseAttribute(){
+        return getMasterAsset().getAttribute(TeltonikaConfigurationAsset.RESPONSE).get();
     }
 }
