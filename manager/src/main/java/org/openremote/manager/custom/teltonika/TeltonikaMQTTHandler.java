@@ -407,9 +407,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             }
 
             //TODO: If specified in configuration, store payloads
-            if(false){
-                Attribute<String> payloadAttribute = new Attribute<>("payload", ValueType.TEXT, payloadContent);
+            if(getConfig().getStorePayloads().getValue().orElseThrow()){
+                TeltonikaDataPayload payload = new ObjectMapper().readValue(payloadContent, TeltonikaDataPayload.class);
+                Attribute<TeltonikaDataPayload> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, payload);
                 payloadAttribute.addMeta(new MetaItem<>(MetaItemType.STORE_DATA_POINTS, true));
+                payloadAttribute.setTimestamp(attributes.get(CarAsset.LAST_CONTACT).orElseThrow().getValue().orElseThrow().getTime());
                 attributes.add(payloadAttribute);
             }
 
@@ -683,6 +685,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         rootConfig.setDefaultModelNumber("FMC003");
         rootConfig.setCommandTopic("sendToDevice");
         rootConfig.setResponseTopic("response");
+        rootConfig.setStorePayloads(false);
 
         fmc003.setModelNumber("FMC003");
         ObjectMapper mapper = new ObjectMapper();

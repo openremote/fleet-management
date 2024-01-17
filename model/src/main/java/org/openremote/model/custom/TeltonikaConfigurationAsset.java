@@ -17,6 +17,7 @@ public class TeltonikaConfigurationAsset extends Asset<TeltonikaConfigurationAss
     public static final AttributeDescriptor<String[]> WHITELIST = new AttributeDescriptor<>("deviceIMEIWhitelist", ValueType.TEXT.asArray()).withOptional(true);
     public static final AttributeDescriptor<Boolean> ENABLED = new AttributeDescriptor<>("Enabled", ValueType.BOOLEAN);
     public static final AttributeDescriptor<Boolean> CHECK_FOR_IMEI = new AttributeDescriptor<>("CheckForValidIMEI", ValueType.BOOLEAN);
+    public static final AttributeDescriptor<Boolean> STORE_PAYLOADS = new AttributeDescriptor<>("StorePayloads", ValueType.BOOLEAN);
     public static final AttributeDescriptor<String> DEFAULT_MODEL_NUMBER = new AttributeDescriptor<>("defaultModelNumber", ValueType.TEXT);
     public static final AttributeDescriptor<String> COMMAND = new AttributeDescriptor<>("command", ValueType.TEXT);
     public static final AttributeDescriptor<String> RESPONSE = new AttributeDescriptor<>("response", ValueType.TEXT)
@@ -63,4 +64,8 @@ public class TeltonikaConfigurationAsset extends Asset<TeltonikaConfigurationAss
         return this;
     }
 
+    public TeltonikaConfigurationAsset setStorePayloads(Boolean value) {
+        getAttributes().getOrCreate(STORE_PAYLOADS).setValue(value);
+        return this;
+    }
 }

@@ -78,4 +78,8 @@ public class TeltonikaConfiguration {
     public Attribute<String> getResponseAttribute(){
         return getMasterAsset().getAttribute(TeltonikaConfigurationAsset.RESPONSE).get();
     }
+
+    public Attribute<Boolean> getStorePayloads(){
+        return getMasterAsset().getAttribute(TeltonikaConfigurationAsset.STORE_PAYLOADS).get();
+    }
 }
