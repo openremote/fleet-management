@@ -2,6 +2,7 @@ package org.openremote.manager.custom.teltonika.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.openremote.container.timer.TimerService;
 import org.openremote.model.Constants;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
@@ -37,7 +38,7 @@ public class TeltonikaAttributeProcessingHelper {
      * @param payloadContent Payload coming from Teltonika device
      * @return Map of {@link Attribute}s to be assigned to the {@link Asset}.
      */
-    public static AttributeMap getAttributesFromPayload(String payloadContent, Logger logger, TeltonikaConfiguration config) throws JsonProcessingException {
+    public static AttributeMap getAttributesFromPayload(String payloadContent, Logger logger, TeltonikaConfiguration config, TimerService timerService) throws JsonProcessingException {
 
 
         HashMap<String, TeltonikaParameter> params = new HashMap<>();
@@ -55,8 +56,10 @@ public class TeltonikaAttributeProcessingHelper {
                     (existing, replacement) -> existing,
                     HashMap::new
             ));
+            if(params.size() < 10){
+                logger.warning("Parsed "+params.size()+" Teltonika Parameters");
+            }
 
-            logger.info("Parsed "+params.size()+" Teltonika Parameters");
 
         } catch (Exception e) {
             logger.warning("Could not parse the Teltonika Parameter file");
@@ -132,7 +135,8 @@ public class TeltonikaAttributeProcessingHelper {
             map.addAll(new Attribute<>
                     (
                             new AttributeDescriptor<>(config.getResponseAttribute().getValue().orElse("response"), ValueType.TEXT),
-                            response.rsp
+                            response.rsp,
+                            timerService.getCurrentTimeMillis()
                     )
             );
             return map;
