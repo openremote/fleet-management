@@ -4,6 +4,21 @@ This repository contains the OpenRemote custom project that contains full suppor
 
 Please look at the wiki for the tutorial on how to set up your ownfleet management system, and the Developer Guide to understand the inner workings of the fleet management implementation.
 
+## Quickstart
+
+An online demo will be made available to the public shortly, but you can still run the OpenRemote fleet management implementation locally using Docker:
+
+The quickest way to get your own environment with full access is to make use of our docker images (both `amd64` and `arm64` are supported). 
+1. Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop) installed (v18+). 
+2. Download the docker compose file:
+[OpenRemote Stack](https://raw.githubusercontent.com/openremote/fleet-management/master/docker-compose.yml) (Right click 'Save link as...')
+3. In a terminal `cd` to where you just saved the compose file and then run:
+```
+    docker-compose pull
+    docker-compose -p fleet-management up
+```
+If all goes well then you should now be able to access the OpenRemote Manager UI at [https://localhost](https://localhost). You will need to accept the self-signed 
+certificate, see [here](https://www.technipages.com/google-chrome-bypass-your-connection-is-not-private-message) for details how to do this in Chrome (similar for other browsers).
 
 # Custom Project Format
 
