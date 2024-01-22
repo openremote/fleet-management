@@ -44,21 +44,23 @@ volumes:
 #      o: "addr=${EFS_DNS?DNS must be set to mount NFS volume},rw,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
 #      device: ":/"
 
-x-logging: &awslogs
-  logging:
-    driver: awslogs
-    options:
-      awslogs-region: ${AWS_REGION:-eu-west-1}
-      awslogs-group: ${OR_HOSTNAME}
-      awslogs-create-group: 'true'
-      tag: "{{.Name}}/{{.ID}}"
+
+# Re-enable when you figure it out
+#x-logging: &awslogs
+#  logging:
+#    driver: awslogs
+#    options:
+#      awslogs-region: ${AWS_REGION:-eu-west-1}
+#      awslogs-group: ${OR_HOSTNAME}
+#      awslogs-create-group: 'true'
+#      tag: "{{.Name}}/{{.ID}}"
 
 services:
 
   # This service will only populate an empty volume on startup and then exit.
   # If the volume already contains data, it exits immediately.
   deployment:
-    image: openremote/deployment:${DEPLOYMENT_VERSION?DEPLOYMENT_VERSION must be set}
+    image: pankalog/fleet-deployment:${DEPLOYMENT_VERSION?DEPLOYMENT_VERSION must be set}
     volumes:
       - deployment-data:/deployment
 
@@ -81,7 +83,7 @@ services:
       DOMAINNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
       # USE A CUSTOM PROXY CONFIG - COPY FROM https://github.com/openremote/proxy/blob/main/haproxy.cfg
       #HAPROXY_CONFIG: '/data/proxy/haproxy.cfg'
-    <<: *awslogs
+#    <<: *awslogs
 
   postgresql:
     image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
@@ -89,7 +91,7 @@ services:
     volumes:
       - postgresql-data:/var/lib/postgresql/data
       - manager-data:/storage
-    <<: *awslogs
+#    <<: *awslogs
 
   keycloak:
     image: openremote/keycloak:${KEYCLOAK_VERSION:-latest}
@@ -103,10 +105,10 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
       KC_HOSTNAME: ${OR_HOSTNAME:-localhost}
       KC_HOSTNAME_PORT: ${OR_SSL_PORT:--1}
-    <<: *awslogs
+#    <<: *awslogs
 
   manager:
-    image: openremote/manager:${MANAGER_VERSION:-latest}
+    image: pankalog/fleet-management:${MANAGER_VERSION:-latest}
     restart: always
     depends_on:
       keycloak:
@@ -135,4 +137,4 @@ services:
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
       OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
       #OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
-    <<: *awslogs
+#    <<: *awslogs
