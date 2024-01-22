@@ -641,6 +641,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             return Optional.empty();
         }
 
+        //Because of the way that Teltonika sends the Attribute data, it sometimes sends a 1, then a 0, then a trip for the duration of the real trip.
+        //Just check if the duration is greater than 10 seconds, any trip less than that should not be recorded.
+
+        if(previousValue.getTimestamp().get() - StateChangeAssetDatapoint.getTimestamp() < 10000) return Optional.empty();
+
         Attribute<?> tripAttr = new Attribute<>("LastTripStartedAndEndedAt", CustomValueTypes.ASSET_STATE_DURATION, new AssetStateDuration(
             new Timestamp(StateChangeAssetDatapoint.getTimestamp()),
             new Timestamp(previousValue.getTimestamp().get())
