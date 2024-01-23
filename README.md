@@ -28,6 +28,8 @@ If all goes well then you should now be able to access the OpenRemote Manager UI
 You will need to accept the self-signed certificate, see [here](https://www.technipages.com/google-chrome-bypass-your-connection-is-not-private-message) for details how to do this in Chrome 
 (similar for other browsers).
 
+To configure the devices and OpenRemote to properly communicate, check the tutorial and quickstart guides in the wiki.
+
 ### Login credentials
 Username: admin  
 Password: secret
