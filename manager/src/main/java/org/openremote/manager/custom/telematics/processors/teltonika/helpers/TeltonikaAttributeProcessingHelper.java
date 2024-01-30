@@ -1,4 +1,4 @@
-package org.openremote.manager.custom.teltonika.helpers;
+package org.openremote.manager.custom.telematics.processors.teltonika.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
