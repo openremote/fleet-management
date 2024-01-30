@@ -164,12 +164,12 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         if(eventFilter.apply(attributeEvent) == null) return;
 
-        Asset<?> asset = assetStorageService.find(attributeEvent.getAttributeRef().getId());
+        Asset<?> asset = assetStorageService.find(attributeEvent.getRef().getId());
 //        if (asset.getType() == )
 
-        if(Objects.equals(attributeEvent.getAttributeName(), TeltonikaModelConfigurationAsset.PARAMETER_MAP.getName())) return;
+        if(Objects.equals(attributeEvent.getName(), TeltonikaModelConfigurationAsset.PARAMETER_MAP.getName())) return;
 
-        if (Objects.equals(attributeEvent.getAttributeName(), TeltonikaModelConfigurationAsset.PARAMETER_DATA.getName())){
+        if (Objects.equals(attributeEvent.getName(), TeltonikaModelConfigurationAsset.PARAMETER_DATA.getName())){
             TeltonikaParameter[] newParamList = (TeltonikaParameter[]) attributeEvent.getValue().orElseThrow();
             if(newParamList.length == 0) return;
             getLogger().info("Model map configuration event: " + Arrays.toString(newParamList));
@@ -243,13 +243,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         TeltonikaConfiguration config = getConfig();
 
         // If this is not an AttributeEvent that updates a config.config.getCommandAttribute().getValue().orElse("sendToDevice") field, ignore
-        if (!Objects.equals(event.getAttributeName(), config.getCommandAttribute().getValue().orElse("sendToDevice"))) return;
+        if (!Objects.equals(event.getName(), config.getCommandAttribute().getValue().orElse("sendToDevice"))) return;
         //Find the asset in question
-        CarAsset asset = assetStorageService.find(event.getAssetId(), CarAsset.class);
+        CarAsset asset = assetStorageService.find(event.getId(), CarAsset.class);
 
         // Double check, remove later, sanity checks
         if(asset.hasAttribute(config.getCommandAttribute().getValue().orElse("sendToDevice"))){
-            if(Objects.equals(event.getAssetId(), asset.getId())){
+            if(Objects.equals(event.getId(), asset.getId())){
 
                 //Get the IMEI of the device
                 Optional<Attribute<String>> imei;
