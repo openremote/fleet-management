@@ -117,6 +117,7 @@ services:
       # Map data should be accessed from a volume mount
       # 1). Host filesystem - /deployment.local:/deployment.local
       # 2) NFS/EFS network mount - efs-data:/efs
+      - efs-data:/efs
     environment:
       # Here are some typical environment variables you want to set
       # see openremote/profile/deploy.yml for details
