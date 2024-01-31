@@ -508,6 +508,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         TeltonikaConfiguration config = getConfig();
 
+        // This is where you would specify the Asset type that is inherited from the CarAsset class.
         CarAsset testAsset = new CarAsset("Teltonika Asset "+newDeviceImei)
             .setRealm(realm)
             .setModelNumber(getConfig().getDefaultModelNumber())
@@ -535,8 +536,6 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             testAsset.getAttributes().forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
             attributes.forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
         });
-
-
 
         updateAsset(testAsset, attributes);
     }

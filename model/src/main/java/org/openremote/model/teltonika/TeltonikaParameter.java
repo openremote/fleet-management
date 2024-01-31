@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "hwSupport",
         "parameterGroup"
 })
+//TODO: Create interface for this class called TelematicsDeviceParameter
 public class TeltonikaParameter implements Serializable {
 
     @JsonProperty("propertyIdInAvlPacket")
