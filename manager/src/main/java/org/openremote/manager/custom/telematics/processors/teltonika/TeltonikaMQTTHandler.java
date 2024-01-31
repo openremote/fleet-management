@@ -1,4 +1,4 @@
-package org.openremote.manager.custom.teltonika;
+package org.openremote.manager.custom.telematics.processors.teltonika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,7 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.container.util.UniqueIdentifierGenerator;
 import org.openremote.manager.asset.AssetProcessingService;
 import org.openremote.manager.asset.AssetStorageService;
-import org.openremote.manager.custom.teltonika.helpers.TeltonikaAttributeProcessingHelper;
+import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaAttributeProcessingHelper;
 import org.openremote.manager.datapoint.AssetDatapointService;
 import org.openremote.manager.mqtt.MQTTHandler;
 import org.openremote.manager.mqtt.Topic;
@@ -35,7 +35,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -509,6 +508,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         TeltonikaConfiguration config = getConfig();
 
+        // This is where you would specify the Asset type that is inherited from the CarAsset class.
         CarAsset testAsset = new CarAsset("Teltonika Asset "+newDeviceImei)
             .setRealm(realm)
             .setModelNumber(getConfig().getDefaultModelNumber())
@@ -536,8 +536,6 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             testAsset.getAttributes().forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
             attributes.forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
         });
-
-
 
         updateAsset(testAsset, attributes);
     }

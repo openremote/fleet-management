@@ -1,4 +1,4 @@
-package org.openremote.manager.custom.teltonika.helpers;
+package org.openremote.manager.custom.telematics.processors.teltonika.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -172,6 +172,7 @@ public class TeltonikaAttributeProcessingHelper {
                 try{
                     long unixTimestampMillis = Long.parseLong(entry.getValue().toString());
                     Timestamp deviceTimestamp = Timestamp.from(Instant.ofEpochMilli(unixTimestampMillis));
+                    //Maybe this attribute should have the value set as server time and the device time as a timestamp?
                     attributes.add(new Attribute<>(CarAsset.LAST_CONTACT, deviceTimestamp, deviceTimestamp.getTime()));
 
                     //Update all affected attribute timestamps
