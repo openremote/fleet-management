@@ -66,7 +66,7 @@ public class CustomProtocol extends AbstractProtocol<CustomAgent, DefaultAgentLi
     }
 
     @Override
-    protected void doLinkedAttributeWrite(Attribute<?> attribute, DefaultAgentLink agentLink, AttributeEvent event, Object processedValue) {
+    protected void doLinkedAttributeWrite(DefaultAgentLink agentLink, AttributeEvent event, Object processedValue) {
 
     }
 
