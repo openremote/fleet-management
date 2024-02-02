@@ -1,9 +1,8 @@
 package org.openremote.model.custom;
 
-import org.openremote.model.teltonika.TeltonikaDataPayload;
+import org.openremote.manager.custom.telematics.processors.teltonika.TeltonikaDataPayload;
 import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.value.ValueDescriptor;
-import scala.Enumeration;
 
 import java.util.HashMap;
 

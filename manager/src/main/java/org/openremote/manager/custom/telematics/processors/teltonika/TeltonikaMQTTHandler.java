@@ -10,7 +10,7 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.container.util.UniqueIdentifierGenerator;
 import org.openremote.manager.asset.AssetProcessingService;
 import org.openremote.manager.asset.AssetStorageService;
-import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaAttributeProcessingHelper;
+import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaParameterData;
 import org.openremote.manager.datapoint.AssetDatapointService;
 import org.openremote.manager.mqtt.MQTTHandler;
 import org.openremote.manager.mqtt.Topic;
@@ -385,8 +385,14 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
     @Override
     public void onPublish(RemotingConnection connection, Topic topic, ByteBuf body) {
-        String payloadContent = body.toString(StandardCharsets.UTF_8);
-        String realm = topic.getTokens().get(0);
+	    ITeltonikaPayload payload = null;
+	    try {
+		    payload = TeltonikaPayloadFactory.getPayload(body.toString(StandardCharsets.UTF_8));
+	    } catch (JsonProcessingException e) {
+		    getLogger().severe(e.toString());
+            return;
+	    }
+	    String realm = topic.getTokens().get(0);
         String clientId = topic.getTokens().get(1);
         String deviceImei = topic.getTokens().get(3);
 
@@ -396,7 +402,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         try {
             AttributeMap attributes;
             try{
-                attributes = TeltonikaAttributeProcessingHelper.getAttributesFromPayload(payloadContent, getLogger(), getConfig(), timerService);
+                Map<TeltonikaParameterData, Object> data = payload.getAttributesFromPayload(getConfig(), timerService);
+                attributes = payload.getAttributes(data, getConfig(), getLogger());
             }catch (JsonProcessingException e) {
                 getLogger().severe("Failed to getAttributesFromPayload");
                 getLogger().severe(e.toString());
@@ -416,9 +423,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
             //TODO: If specified in configuration, store payloads (if it WAS a data payload)
             try{
-                TeltonikaDataPayload payload = new ObjectMapper().readValue(payloadContent, TeltonikaDataPayload.class);
-                if(getConfig().getStorePayloads().getValue().orElseThrow()){
-                    Attribute<TeltonikaDataPayload> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, payload);
+                if(getConfig().getStorePayloads().getValue().orElseThrow() && payload instanceof TeltonikaDataPayload){
+                    Attribute<?> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, (TeltonikaDataPayload) payload);
                     payloadAttribute.addMeta(new MetaItem<>(MetaItemType.STORE_DATA_POINTS, true));
                     payloadAttribute.setTimestamp(attributes.get(CarAsset.LAST_CONTACT).orElseThrow().getValue().orElseThrow().getTime());
                     attributes.add(payloadAttribute);
