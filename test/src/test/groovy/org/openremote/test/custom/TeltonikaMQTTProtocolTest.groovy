@@ -10,7 +10,7 @@ import org.openremote.manager.asset.AssetProcessingService
 import org.openremote.manager.asset.AssetStorageService
 import org.openremote.manager.event.ClientEventService
 import org.openremote.manager.mqtt.MQTTBrokerService
-import org.openremote.manager.custom.telematics.processors.teltonika.TeltonikaMQTTHandler
+import telematics.teltonika.TeltonikaMQTTHandler
 import org.openremote.manager.setup.SetupService
 import org.openremote.manager.setup.custom.CustomKeycloakSetup
 import org.openremote.model.Constants

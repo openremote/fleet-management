@@ -1,4 +1,4 @@
-package org.openremote.model.custom;
+package org.openremote.model.teltonika;
 
 import jakarta.persistence.Entity;
 import org.openremote.model.asset.Asset;
@@ -6,14 +6,13 @@ import org.openremote.model.asset.AssetDescriptor;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.MetaItem;
 import org.openremote.model.attribute.MetaMap;
+import org.openremote.model.custom.CustomValueTypes;
 import org.openremote.model.geo.GeoJSONPoint;
-import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.value.AttributeDescriptor;
 import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueType;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;

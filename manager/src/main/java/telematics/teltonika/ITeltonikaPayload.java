@@ -1,8 +1,7 @@
-package org.openremote.manager.custom.telematics.processors.teltonika;
+package telematics.teltonika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.openremote.container.timer.TimerService;
-import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaParameterData;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;

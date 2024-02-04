@@ -1,20 +1,25 @@
 
-package org.openremote.manager.custom.telematics.processors.teltonika;
+package telematics.teltonika;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.openremote.container.timer.TimerService;
-import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaParameterData;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
 import org.openremote.model.teltonika.TeltonikaConfiguration;
 import org.openremote.model.teltonika.TeltonikaParameter;
-import org.openremote.model.value.ValueType;
 
 import java.util.Map;
 import java.util.logging.Logger;
-
+/**
+ * This class is used to represent the payload from a Teltonika device when responding to an SMS message.
+ * It is used to parse the payload and extract the response from the device.
+ * It arrives in the format of {@code {"RSP":"OK"}}.
+ * <p>
+ * It implements the {@code ITeltonikaPayload} interface, which is used to extract the payload's
+ * attributes and create an attribute map.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "RSP"

@@ -1,4 +1,4 @@
-package org.openremote.model.custom;
+package org.openremote.model.teltonika;
 
 import jakarta.persistence.Entity;
 import org.openremote.model.asset.Asset;

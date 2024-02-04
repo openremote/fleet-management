@@ -2,9 +2,6 @@ package org.openremote.model.teltonika;
 
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.custom.CustomValueTypes;
-import org.openremote.model.custom.TeltonikaConfigurationAsset;
-import org.openremote.model.custom.TeltonikaModelConfigurationAsset;
-import org.openremote.model.value.AttributeDescriptor;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,6 +1,6 @@
 package org.openremote.model.custom;
 
-import org.openremote.manager.custom.telematics.processors.teltonika.TeltonikaDataPayload;
+import org.openremote.model.teltonika.TeltonikaDataPayloadModel;
 import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.value.ValueDescriptor;
 
@@ -13,5 +13,5 @@ public class CustomValueTypes {
 
     public static final ValueDescriptor<TeltonikaParameterMap> TELTONIKA_PARAMETER_MAP = new ValueDescriptor<>("TeltonikaParameterMap", TeltonikaParameterMap.class);
 
-    public static final ValueDescriptor<TeltonikaDataPayload> TELTONIKA_PAYLOAD = new ValueDescriptor<>("TeltonikaPayload", TeltonikaDataPayload.class);
+    public static final ValueDescriptor<TeltonikaDataPayloadModel> TELTONIKA_PAYLOAD = new ValueDescriptor<>("TeltonikaPayload", TeltonikaDataPayloadModel.class);
 }

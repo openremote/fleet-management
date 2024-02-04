@@ -1,11 +1,10 @@
-package org.openremote.manager.custom.telematics.processors.teltonika;
+package telematics.teltonika;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openremote.container.timer.TimerService;
-import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaParameterData;
 import org.openremote.model.Constants;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
@@ -16,6 +15,7 @@ import org.openremote.model.custom.CarAsset;
 import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.teltonika.State;
 import org.openremote.model.teltonika.TeltonikaConfiguration;
+import org.openremote.model.teltonika.TeltonikaDataPayloadModel;
 import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
@@ -31,15 +31,25 @@ import java.util.stream.Collectors;
 
 import static org.openremote.model.value.MetaItemType.*;
 import static org.openremote.model.value.MetaItemType.READ_ONLY;
+/**
+ * This class is used to represent the payload from a Teltonika device when sending a data payload.
+ * A sample payload can be found and is used in the {@code org.openremote.test.custom.TeltonikaMQTTProtocolTest} class.
+ * <p>
+ * It implements the {@code ITeltonikaPayload} interface, which is used to extract the payload's
+ * attributes and create an attribute map.
+ */
+public class TeltonikaDataPayload implements ITeltonikaPayload {
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-		"payload"
-})
-public class TeltonikaDataPayload implements Serializable, ITeltonikaPayload {
 
-	@JsonProperty("state")
-	public State state;
+	protected TeltonikaDataPayload(State payload) {
+		this.state = payload;
+
+	}
+	private State state;
+
+	public State getState() {
+		return state;
+	}
 
 	// getter and setter for logger
 	private static final Logger logger = Logger.getLogger(TeltonikaDataPayload.class.getName());

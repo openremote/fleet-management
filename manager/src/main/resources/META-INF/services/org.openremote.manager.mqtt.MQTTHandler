@@ -1,1 +1,1 @@
-org.openremote.manager.custom.telematics.processors.teltonika.TeltonikaMQTTHandler
+telematics.teltonika.TeltonikaMQTTHandler

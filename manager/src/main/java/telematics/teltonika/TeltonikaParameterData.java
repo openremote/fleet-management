@@ -1,4 +1,4 @@
-package org.openremote.manager.custom.telematics.processors.teltonika.helpers;
+package telematics.teltonika;
 
 import org.openremote.model.teltonika.TeltonikaParameter;
 

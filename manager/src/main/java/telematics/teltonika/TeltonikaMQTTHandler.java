@@ -1,4 +1,4 @@
-package org.openremote.manager.custom.telematics.processors.teltonika;
+package telematics.teltonika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,6 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.container.util.UniqueIdentifierGenerator;
 import org.openremote.manager.asset.AssetProcessingService;
 import org.openremote.manager.asset.AssetStorageService;
-import org.openremote.manager.custom.telematics.processors.teltonika.helpers.TeltonikaParameterData;
 import org.openremote.manager.datapoint.AssetDatapointService;
 import org.openremote.manager.mqtt.MQTTHandler;
 import org.openremote.manager.mqtt.Topic;
@@ -424,7 +423,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             //TODO: If specified in configuration, store payloads (if it WAS a data payload)
             try{
                 if(getConfig().getStorePayloads().getValue().orElseThrow() && payload instanceof TeltonikaDataPayload){
-                    Attribute<?> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, (TeltonikaDataPayload) payload);
+                    Attribute<?> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, new TeltonikaDataPayloadModel(((TeltonikaDataPayload) payload).getState()));
                     payloadAttribute.addMeta(new MetaItem<>(MetaItemType.STORE_DATA_POINTS, true));
                     payloadAttribute.setTimestamp(attributes.get(CarAsset.LAST_CONTACT).orElseThrow().getValue().orElseThrow().getTime());
                     attributes.add(payloadAttribute);
