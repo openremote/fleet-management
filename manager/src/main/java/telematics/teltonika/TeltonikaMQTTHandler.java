@@ -26,6 +26,7 @@ import org.openremote.model.query.filter.*;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.*;
 import org.openremote.model.value.*;
+import telematics.teltonika.helpers.TeltonikaConfigurationFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -73,7 +74,17 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
     protected final ConcurrentMap<String, TeltonikaDevice> connectionSubscriberInfoMap = new ConcurrentHashMap<>();
 
-
+    private TeltonikaConfiguration config;
+    private TeltonikaConfiguration getConfig() {
+        try{
+            return TeltonikaConfiguration.getInstance();
+        } catch (NullPointerException e) {
+            TeltonikaConfiguration tempConfig = TeltonikaConfigurationFactory.createConfiguration(assetStorageService, timerService, getParameterFileString());
+            TeltonikaConfiguration.setInstance(tempConfig);
+            config = tempConfig;
+        }
+        return config;
+    }
 
     /**
      * Indicates if this handler will handle the specified topic; independent of whether it is a published message
@@ -86,34 +97,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         return TELTONIKA_DEVICE_TOKEN.equalsIgnoreCase(topicTokenIndexToString(topic, 2)) && getConfig().getEnabled();
     }
 
-    private TeltonikaConfiguration getConfig() {
-        List<TeltonikaConfigurationAsset> masterAssets = assetStorageService.findAll(
-                        new AssetQuery()
-                                .types(TeltonikaConfigurationAsset.class)
-                                .realm(new RealmPredicate("master"))
 
-                )
-                .stream()
-                .map(asset -> (TeltonikaConfigurationAsset) asset)
-                .toList();
-
-        if (masterAssets.size() != 1) {
-            getLogger().severe("More than 1 Master Teltonika configurations found! Shutting down.");
-        }
-
-        List<TeltonikaModelConfigurationAsset> modelAssets = assetStorageService.findAll(
-                        new AssetQuery()
-                                .types(TeltonikaModelConfigurationAsset.class)
-                                .realm(new RealmPredicate("master"))
-                                .parents(new ParentPredicate(masterAssets.get(0).getId()))
-                )
-                .stream()
-                .map(asset -> (TeltonikaModelConfigurationAsset) asset)
-                .toList();
-
-        return new TeltonikaConfiguration(masterAssets.get(0), modelAssets);
-
-    }
 
     @Override
     public void start(Container container) throws Exception {
@@ -125,6 +109,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         AssetDatapointService = container.getService(AssetDatapointService.class);
         timerService = container.getService(TimerService.class);
         DeviceParameterPath = container.isDevMode() ? Paths.get("../deployment/manager/fleet/FMC003.json") : Paths.get("/deployment/manager/fleet/FMC003.json");
+        config = TeltonikaConfigurationFactory.createConfiguration(assetStorageService, timerService, getParameterFileString());
         if (!identityService.isKeycloakEnabled()) {
             isKeycloak = false;
         } else {
@@ -136,11 +121,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         List<Asset<?>> assets = assetStorageService.findAll(new AssetQuery().types(TeltonikaModelConfigurationAsset.class));
 
         if(assets.isEmpty()) {
-            getLogger().severe("No Teltonika configuration assets found! Creating defaults...");
-
-            initializeConfigurationAssets();
-
-            getLogger().info("Created default configuration");
+            getLogger().severe("No Teltonika configuration assets found! Exiting...");
+            throw new NullPointerException();
         }
 
         // Internal Subscription for the command attribute
@@ -166,8 +148,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         Asset<?> asset = assetStorageService.find(attributeEvent.getRef().getId());
 //        if (asset.getType() == )
 
-        if(Objects.equals(attributeEvent.getName(), TeltonikaModelConfigurationAsset.PARAMETER_MAP.getName())) return;
-
+        if(Objects.equals(attributeEvent.getName(), TeltonikaModelConfigurationAsset.PARAMETER_MAP.getName())) {
+            // This means that the parameter map has been updated, hence the new ModelConfigurationAsset is valid.
+            // Hence, the configuration is now out of date, so we need to update it.
+            TeltonikaConfigurationFactory.refreshInstance(assetStorageService, timerService, getParameterFileString());
+        }
         if (Objects.equals(attributeEvent.getName(), TeltonikaModelConfigurationAsset.PARAMETER_DATA.getName())){
             TeltonikaParameter[] newParamList = (TeltonikaParameter[]) attributeEvent.getValue().orElseThrow();
             if(newParamList.length == 0) return;
@@ -181,8 +166,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             );
 //            LOG.info("Publishing to client inbound queue: " + attribute.getName());
             assetProcessingService.sendAttributeEvent(modificationEvent);
-
         }
+
+
     }
 
     /**
@@ -193,13 +179,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      */
     private AssetFilter<AttributeEvent> buildConfigurationAssetFilter(){
 
-        TeltonikaConfiguration config = getConfig();
-        config.getChildModelIDs();
+        List<TeltonikaModelConfigurationAsset> modelAssets = getConfig().getModelAssets();
 
-
-        List<TeltonikaModelConfigurationAsset> modelAssets = config.getModelAssets();
-
-        TeltonikaConfigurationAsset masterAsset = config.getMasterAsset();
+        TeltonikaConfigurationAsset masterAsset = getConfig().getMasterAsset();
 
 
         List<Asset<?>> allIds = new ArrayList<>(modelAssets);
@@ -214,22 +196,20 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * Creates a filter for the AttributeEvents that could send a command to a Teltonika Device.
      *
      * @return AssetFilter of CarAssets that have both {@code getConfig().getResponseAttribute().getName()} and
-     * {@code getConfig().config.getCommandAttribute().getValue().orElse("sendToDevice")} as attributes.
+     * {@code getConfig().getCommandAttribute().getValue().orElse("sendToDevice")} as attributes.
      */
     private AssetFilter<AttributeEvent> buildCommandAssetFilter(){
 
-        TeltonikaConfiguration config = getConfig();
-
         List<Asset<?>> assetsWithAttribute = assetStorageService
             .findAll(new AssetQuery().types(CarAsset.class)
-                .attributeNames(config.getCommandAttribute().getValue().orElse("sendToDevice")));
+                .attributeNames(getConfig().getCommandAttribute().getValue().orElse("sendToDevice")));
         List<String> listOfCarAssetIds = assetsWithAttribute.stream()
             .map(Asset::getId)
             .toList();
 
         AssetFilter<AttributeEvent> event = new AssetFilter<>();
         event.setAssetIds(listOfCarAssetIds.toArray(new String[0]));
-        event.setAttributeNames(config.getCommandAttribute().getValue().orElse("sendToDevice"));
+        event.setAttributeNames(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"));
         return event;
     }
 
@@ -239,15 +219,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         if(eventFilter.apply(event) == null) return;
 
-        TeltonikaConfiguration config = getConfig();
-
-        // If this is not an AttributeEvent that updates a config.config.getCommandAttribute().getValue().orElse("sendToDevice") field, ignore
-        if (!Objects.equals(event.getName(), config.getCommandAttribute().getValue().orElse("sendToDevice"))) return;
+        // If this is not an AttributeEvent that updates a getConfig().getCommandAttribute().getValue().orElse("sendToDevice") field, ignore
+        if (!Objects.equals(event.getName(), getConfig().getCommandAttribute().getValue().orElse("sendToDevice"))) return;
         //Find the asset in question
         CarAsset asset = assetStorageService.find(event.getId(), CarAsset.class);
 
         // Double check, remove later, sanity checks
-        if(asset.hasAttribute(config.getCommandAttribute().getValue().orElse("sendToDevice"))){
+        if(asset.hasAttribute(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"))){
             if(Objects.equals(event.getId(), asset.getId())){
 
                 //Get the IMEI of the device
@@ -278,7 +256,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                         getLogger().fine("MQTT Message fired");
                     }
                     else{
-                        getLogger().warning("Attribute "+config.getCommandAttribute().getValue().orElse("sendToDevice")+" was empty");
+                        getLogger().warning("Attribute "+getConfig().getCommandAttribute().getValue().orElse("sendToDevice")+" was empty");
                     }
                 }
             }
@@ -382,8 +360,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         );
     }
 
+    private long startTimestamp = 0;
+    private long endTimestamp = 0;
     @Override
     public void onPublish(RemotingConnection connection, Topic topic, ByteBuf body) {
+        startTimestamp = System.currentTimeMillis();
 	    ITeltonikaPayload payload = null;
         String deviceImei = topic.getTokens().get(3);
 
@@ -402,14 +383,10 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         } catch (JsonProcessingException e) {
             getLogger().severe(e.toString());
             return;
-	    }
-	    String realm = topic.getTokens().get(0);
+        }
+        String realm = topic.getTokens().get(0);
         String clientId = topic.getTokens().get(1);
-        String deviceImei = topic.getTokens().get(3);
 
-        String deviceUuid = UniqueIdentifierGenerator.generateId(deviceImei);
-
-        Asset<?> asset = assetStorageService.find(deviceUuid);
         try {
             AttributeMap attributes;
             try{
@@ -523,8 +500,6 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      */
     private void createNewAsset(String newDeviceId, String newDeviceImei, String realm, AttributeMap attributes) {
 
-        TeltonikaConfiguration config = getConfig();
-
         // This is where you would specify the Asset type that is inherited from the CarAsset class.
         CarAsset testAsset = new CarAsset("Teltonika Asset "+newDeviceImei)
             .setRealm(realm)
@@ -539,9 +514,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         testAsset.getAttributes().add(new Attribute<>(CarAsset.IMEI, newDeviceImei));
 
         // Create Command and Response Attributes
-        Attribute<String> command = new Attribute<>(new AttributeDescriptor<>(config.getCommandAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
+        Attribute<String> command = new Attribute<>(new AttributeDescriptor<>(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
         testAsset.getAttributes().add(command);
-//        Attribute<String> response = new Attribute<>(new AttributeDescriptor<>(config.getResponseAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
+//        Attribute<String> response = new Attribute<>(new AttributeDescriptor<>(getConfig().getResponseAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
 //        testAsset.getAttributes().add(response);
 
 
@@ -726,38 +701,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 //            LOG.info("Publishing to client inbound queue: " + attribute.getName());
             assetProcessingService.sendAttributeEvent(attributeEvent);
         }));
+        endTimestamp = System.currentTimeMillis();
+
+        getLogger().info("Updated CarAsset in " + (endTimestamp - startTimestamp) + "ms");
     }
 
-    private void initializeConfigurationAssets(){
-        // Create initial configuration
-        TeltonikaConfigurationAsset rootConfig = new TeltonikaConfigurationAsset("Teltonika Device Configuration");
-        TeltonikaModelConfigurationAsset fmc003 = new TeltonikaModelConfigurationAsset("FMC003");
-
-        rootConfig.setEnabled(true);
-        rootConfig.setCheckForImei(false);
-        rootConfig.setDefaultModelNumber("FMC003");
-        rootConfig.setCommandTopic("sendToDevice");
-        rootConfig.setResponseTopic("response");
-        rootConfig.setStorePayloads(false);
-
-        fmc003.setModelNumber("FMC003");
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            TeltonikaParameter[] params = mapper.readValue(getParameterFileString(), TeltonikaParameter[].class);
-            fmc003.setParameterData(params);
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Could not parse Teltonika Parameter JSON file");
-        }
-
-        rootConfig.setRealm("master");
-        fmc003.setRealm("master");
-
-         rootConfig = assetStorageService.merge(rootConfig);
-
-         fmc003.setParent(rootConfig);
-
-         assetStorageService.merge(fmc003);
-
-    }
 }

@@ -1,8 +1,5 @@
 package telematics.teltonika;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openremote.container.timer.TimerService;
 import org.openremote.model.Constants;
@@ -14,13 +11,10 @@ import org.openremote.model.attribute.MetaMap;
 import org.openremote.model.custom.CarAsset;
 import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.teltonika.State;
-import org.openremote.model.teltonika.TeltonikaConfiguration;
-import org.openremote.model.teltonika.TeltonikaDataPayloadModel;
 import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
 
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -58,7 +52,6 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 	public State getState() {
 		return state;
 	}
-
 	// getter and setter for logger
 
 	private static final Logger logger = Logger.getLogger(TeltonikaDataPayload.class.getName());

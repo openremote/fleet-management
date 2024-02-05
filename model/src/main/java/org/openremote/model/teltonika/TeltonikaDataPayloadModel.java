@@ -15,6 +15,9 @@ public class TeltonikaDataPayloadModel implements Serializable {
 	@JsonProperty("state")
 	public State state;
 
+	public TeltonikaDataPayloadModel() {
+	}
+
 	public TeltonikaDataPayloadModel(State state) {
 		this.state = state;
 	}
