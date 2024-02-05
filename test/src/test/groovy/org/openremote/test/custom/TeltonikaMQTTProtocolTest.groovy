@@ -515,7 +515,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
             sleep(100);
         }
         then: "it's done"
-        sleep(1000)
+        sleep(100)
 
 
 
