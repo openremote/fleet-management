@@ -5,13 +5,13 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
-import org.openremote.model.teltonika.TeltonikaConfiguration;
 
 import java.util.Map;
 import java.util.logging.Logger;
 
 public interface ITeltonikaPayload {
 
+	String getModelNumber();
 	/**
 	 * Returns list of attributes depending on the Teltonika JSON Payload.
 	 * Uses the logic and results from parsing the Teltonika Parameter IDs.

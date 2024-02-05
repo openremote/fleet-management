@@ -385,10 +385,22 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     @Override
     public void onPublish(RemotingConnection connection, Topic topic, ByteBuf body) {
 	    ITeltonikaPayload payload = null;
-	    try {
-		    payload = TeltonikaPayloadFactory.getPayload(body.toString(StandardCharsets.UTF_8));
-	    } catch (JsonProcessingException e) {
-		    getLogger().severe(e.toString());
+        String deviceImei = topic.getTokens().get(3);
+
+        String deviceUuid = UniqueIdentifierGenerator.generateId(deviceImei);
+
+        Asset<?> asset = assetStorageService.find(deviceUuid);
+        String deviceModelNumber = asset != null
+                ? asset.getAttribute(CarAsset.MODEL_NUMBER).orElseThrow().getValue().orElse(getConfig().getDefaultModelNumber())
+                : getConfig().getDefaultModelNumber();
+        if (deviceModelNumber == null){
+            getLogger().fine("Device Model Number is null, setting to default");
+            deviceModelNumber = getConfig().getDefaultModelNumber();
+        }
+        try {
+            payload = TeltonikaPayloadFactory.getPayload(body.toString(StandardCharsets.UTF_8), deviceModelNumber);
+        } catch (JsonProcessingException e) {
+            getLogger().severe(e.toString());
             return;
 	    }
 	    String realm = topic.getTokens().get(0);

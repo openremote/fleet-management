@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.openremote.container.timer.TimerService;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
-import org.openremote.model.teltonika.TeltonikaConfiguration;
 import org.openremote.model.teltonika.TeltonikaParameter;
 
 import java.util.Map;
@@ -42,6 +41,16 @@ public class TeltonikaResponsePayload implements ITeltonikaPayload {
             sb.append(']');
         }
         return sb.toString();
+    }
+
+    private String modelNumber;
+
+    @Override
+    public String getModelNumber() {
+        return modelNumber;
+    }
+    public void setModelNumber(String modelNumber) {
+        this.modelNumber = modelNumber;
     }
 
     @Override

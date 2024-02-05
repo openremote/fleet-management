@@ -40,11 +40,19 @@ import static org.openremote.model.value.MetaItemType.READ_ONLY;
  */
 public class TeltonikaDataPayload implements ITeltonikaPayload {
 
+	@Override
+	public String getModelNumber() {
+		return modelNumber;
+	}
 
-	protected TeltonikaDataPayload(State payload) {
+	private String modelNumber = null;
+
+	protected TeltonikaDataPayload(State payload, String modelNumber) {
 		this.state = payload;
+		this.modelNumber = modelNumber;
 
 	}
+
 	private State state;
 
 	public State getState() {
@@ -52,6 +60,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 	}
 
 	// getter and setter for logger
+
 	private static final Logger logger = Logger.getLogger(TeltonikaDataPayload.class.getName());
 
 
@@ -71,7 +80,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 			// being the value
 
 			//Cast keys to String
-			params = config.getParameterMap().get(config.getDefaultModelNumber()).entrySet().stream().collect(Collectors.toMap(
+			params = config.getModelParameterMap(modelNumber).get(config.getDefaultModelNumber()).entrySet().stream().collect(Collectors.toMap(
 					kvp -> kvp.getKey().toString(),
 					Map.Entry::getValue,
 					(existing, replacement) -> existing,
