@@ -12,8 +12,9 @@ import org.openremote.manager.asset.AssetProcessingService
 import org.openremote.manager.asset.AssetStorageService
 import org.openremote.manager.event.ClientEventService
 import org.openremote.manager.mqtt.MQTTBrokerService
-import org.openremote.model.teltonika.TeltonikaDataPayloadModel
-import telematics.teltonika.TeltonikaDataPayload
+import org.openremote.model.custom.AssetStateDuration
+import org.openremote.model.custom.CustomValueTypes
+import org.openremote.model.query.AssetQuery
 import telematics.teltonika.TeltonikaMQTTHandler
 import org.openremote.manager.setup.SetupService
 import org.openremote.manager.setup.custom.CustomKeycloakSetup
@@ -23,7 +24,7 @@ import org.openremote.model.asset.agent.ConnectionStatus
 import org.openremote.model.attribute.Attribute
 import org.openremote.model.attribute.AttributeEvent
 import org.openremote.model.attribute.AttributeRef
-import org.openremote.model.custom.CarAsset
+import org.openremote.model.custom.VehicleAsset
 import org.openremote.model.teltonika.TeltonikaParameter
 import org.openremote.model.util.ValueUtil
 import org.openremote.model.value.MetaItemType
@@ -34,7 +35,7 @@ import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
 class TeltonikaMQTTProtocolTest extends Specification implements ManagerContainerTrait {
-    @Shared public def conditions = new PollingConditions(timeout: 100, delay: 0.1)
+    @Shared public def conditions = new PollingConditions(timeout: 10, delay: 0.1)
     public static Map<String, TeltonikaParameter> params;
 
     public static Container container
@@ -330,7 +331,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         conditions.eventually {
             asset = assetStorageService.find(UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI()))
             assert asset != null;
-            assert asset.getAttribute(CarAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
+            assert asset.getAttribute(VehicleAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
             //Make sure that it parsed the attributes, since there is an issue of parsing the FMC003.json file
             assert asset.getAttributes().size() > 5;
 
@@ -416,7 +417,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         conditions.eventually {
             asset = assetStorageService.find(UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI()))
             assert asset != null;
-            assert asset.getAttribute(CarAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
+            assert asset.getAttribute(VehicleAsset.IMEI).get().getValue().get() == (getTELTONIKA_DEVICE_IMEI());
         }
 
         when: "the send message attribute is created and then updated"
@@ -502,16 +503,29 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         def slurp = new JsonSlurper()
         ArrayList<Object> payloads = slurp.parseText(getClass().getResource("/teltonika/SortedPayloads.json").text) as ArrayList<Object>;
         then: "Assert that the payloads are correct"
-        payloads.stream().forEach { Object payload ->
-            getLOG().debug(payload.toString())
-        }
 
+        String assetId = UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI());
+        int i = 0;
         when: "the device starts publishing payloads"
         payloads.stream().forEach { Object payload ->
 //             Your logic here, for example:
             getLOG().debug(JsonOutput.toJson(payload));
 
             client.sendMessage(new MQTTMessage<String>(correctTopic1, JsonOutput.toJson(payload)))
+
+            conditions.eventually {
+                if(i > 0){
+                    long payloadTimestamp = payload['state']['reported']['ts'] as long;
+                    int payloadElements = payload['state']['reported'].collect().size();
+                    Asset<VehicleAsset> asset = assetStorageService.find(new AssetQuery().ids(assetId).types(VehicleAsset.class))
+                    assert asset.getAttribute(VehicleAsset.LAST_CONTACT).get().getValue().get().getTime() == payload['state']['reported']['ts']
+
+                    //Check if the payload creates an equal amount of AttributeEvents
+                    assert asset.getAttributes().stream().filter ({a -> a.getTimestamp().get() == payloadTimestamp }).filter(a -> a.getType() != CustomValueTypes.ASSET_STATE_DURATION).count() == payloadElements
+                }
+            }
+            i++;
+
             sleep(100);
         }
         then: "it's done"
