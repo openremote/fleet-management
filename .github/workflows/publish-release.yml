@@ -33,7 +33,6 @@ jobs:
           tags: |
             pankalog/test-deployment:${{ env.GIT_DEPLOYMENT_VERSION }}
             pankalog/test-deployment:latest
-          builder: multi-platform-builder
 
       - name: Build and push Fleet Management Image
         uses: docker/build-push-action@v2
@@ -45,7 +44,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/fleet-test:${{ env.GIT_DEPLOYMENT_VERSION }}
             ${{ secrets.DOCKER_USERNAME }}/fleet-test:latest
-          builder: multi-platform-builder
 
       - name: Create Release
         id: create_release
