@@ -1,6 +1,7 @@
 package telematics.teltonika;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.checkerframework.checker.units.qual.A;
 import org.openremote.container.timer.TimerService;
 import org.openremote.model.Constants;
 import org.openremote.model.asset.Asset;
@@ -8,13 +9,14 @@ import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
 import org.openremote.model.attribute.MetaItem;
 import org.openremote.model.attribute.MetaMap;
-import org.openremote.model.custom.CarAsset;
+import org.openremote.model.custom.VehicleAsset;
 import org.openremote.model.geo.GeoJSONPoint;
 import org.openremote.model.teltonika.State;
 import org.openremote.model.teltonika.TeltonikaParameter;
 import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
 
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -56,6 +58,9 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 
 	private static final Logger logger = Logger.getLogger(TeltonikaDataPayload.class.getName());
 
+	private Logger getLogger() {
+		return logger;
+	}
 
 	/**
 	 * Returns list of attributes depending on the Teltonika JSON Payload.
@@ -93,7 +98,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 		List<TeltonikaParameterData> customParams = new ArrayList<TeltonikaParameterData>(List.of(
 				new TeltonikaParameterData("pr", new TeltonikaParameter(-1, "Priority", String.valueOf(1), "Unsigned", String.valueOf(0), String.valueOf(4), String.valueOf(1), "-", "0: Low - 1: High - 2: Panic", "all", "Permanent I/O Elements")),
 				new TeltonikaParameterData("alt", new TeltonikaParameter(-1, "Altitude", "2", "Signed", "-1000", "+3000", "1", "m", "meters above sea level", "all", "Permanent I/O Elements")),
-				new TeltonikaParameterData("ang", new TeltonikaParameter(-1, "Angle", "2", "Signed", "-360", "+460", "1", "deg", "degrees from north pole", "all", "Permanent I/O Elements")),
+				new TeltonikaParameterData("ang", new TeltonikaParameter(-1, "Direction", "2", "Signed", "-360", "+460", "1", "deg", "degrees from north pole", "all", "Permanent I/O Elements")),
 				new TeltonikaParameterData("sat", new TeltonikaParameter(-1, "Satellites", "1", "Unsigned", "0", "1000", "1", "-", "number of visible satellites", "all", "Permanent I/O Elements")),
 				new TeltonikaParameterData("sp", new TeltonikaParameter(-1, "Speed", "2", "Signed", "0", "1000", "1", "km/h", "speed calculated from satellites", "all", "Permanent I/O Elements")),
 				new TeltonikaParameterData("evt", new TeltonikaParameter(-1, "Event Triggered", "2", "Signed", "0", "10000", "1", "-", "Parameter ID which generated this payload", "all", "Permanent I/O Elements")),
@@ -146,8 +151,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 
 	}
 
-
-	public AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger) {
+	public AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger, Map<String, AttributeDescriptor<?>> descs) {
 		AttributeMap attributes = new AttributeMap();
 		String[] specialProperties = {"latlng", "ts"};
 		for (Map.Entry<TeltonikaParameterData, Object> entry : payloadMap.entrySet()) {
@@ -175,7 +179,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 					long unixTimestampMillis = Long.parseLong(entry.getValue().toString());
 					Timestamp deviceTimestamp = Timestamp.from(Instant.ofEpochMilli(unixTimestampMillis));
 					//Maybe this attribute should have the value set as server time and the device time as a timestamp?
-					attributes.add(new Attribute<>(CarAsset.LAST_CONTACT, deviceTimestamp, deviceTimestamp.getTime()));
+					attributes.add(new Attribute<>(VehicleAsset.LAST_CONTACT, deviceTimestamp, deviceTimestamp.getTime()));
 
 					//Update all affected attribute timestamps
 					attributes.forEach(attribute -> attribute.setTimestamp(deviceTimestamp.getTime()));
@@ -184,6 +188,29 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 					logger.severe(e.toString());
 					throw e;
 				}
+				continue;
+			}
+			if(Objects.equals(parameterId, "ang")){
+				//This is the parameter ID which triggered the payload
+				Object angle = ValueUtil.getValueCoerced(entry.getValue(), ValueType.DIRECTION.getType()).orElseThrow();
+				Attribute<String> attr = new Attribute(VehicleAsset.DIRECTION, angle);
+				attributes.add(attr);
+				continue;
+			}
+
+			/*
+			* Quick explanation here, with the new update that allows for custom Asset Types, we need to somehow
+			* be able to understand when a parameter has been defined as an Attribute in the custom Asset Type that we
+			* are using. By using the list of AttributeDescriptors, we can check if the parameter ID is present in the
+			* list of AttributeDescriptors. If it is, then we can directly use the AttributeDescriptor we found to
+			* dynamically create that attribute in the way the AttributeDescriptor says, whether the Attribute has been
+			* created yet or not.
+			* */
+			if(descs.containsKey(parameterId)){
+				AttributeDescriptor<?> descriptor = descs.get(parameterId);
+				Object obj = ValueUtil.getValueCoerced(entry.getValue(), descriptor.getType().getType()).orElseThrow();
+				Attribute<?> attr = new Attribute(descs.get(parameterId), obj);
+				attributes.add(attr);
 				continue;
 			}
 
@@ -325,7 +352,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 
 		}
 		//Timestamp grabbed from the device.
-		attributes.get(CarAsset.LAST_CONTACT).ifPresent(lastContact -> {
+		attributes.get(VehicleAsset.LAST_CONTACT).ifPresent(lastContact -> {
 			lastContact.getValue().ifPresent(value -> {
 				attributes.forEach(attribute -> attribute.setTimestamp(value.getTime()));
 			});

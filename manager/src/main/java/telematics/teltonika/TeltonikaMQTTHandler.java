@@ -1,7 +1,6 @@
 package telematics.teltonika;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
@@ -18,6 +17,7 @@ import org.openremote.manager.security.ManagerKeycloakIdentityProvider;
 import org.openremote.model.Container;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.asset.AssetFilter;
+import org.openremote.model.asset.AssetTypeInfo;
 import org.openremote.model.attribute.*;
 import org.openremote.model.custom.*;
 import org.openremote.model.datapoint.ValueDatapoint;
@@ -25,10 +25,13 @@ import org.openremote.model.query.AssetQuery;
 import org.openremote.model.query.filter.*;
 import org.openremote.model.syslog.SyslogCategory;
 import org.openremote.model.teltonika.*;
+import org.openremote.model.util.ValueUtil;
 import org.openremote.model.value.*;
 import telematics.teltonika.helpers.TeltonikaConfigurationFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,6 +47,9 @@ import static org.openremote.model.syslog.SyslogCategory.API;
 import static org.openremote.model.value.MetaItemType.*;
 
 public class TeltonikaMQTTHandler extends MQTTHandler {
+
+    public static final Class<? extends  Asset<VehicleAsset>> TELTONIKA_DEVICE_ASSET_CLASS = CarAsset.class;
+    public static AssetTypeInfo TELTONIKA_DEVICE_ASSET_INFO = null;
 
     protected static class TeltonikaDevice {
         String clientId;
@@ -108,6 +114,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         assetProcessingService = container.getService(AssetProcessingService.class);
         AssetDatapointService = container.getService(AssetDatapointService.class);
         timerService = container.getService(TimerService.class);
+        TELTONIKA_DEVICE_ASSET_INFO = ValueUtil.getAssetInfo(TELTONIKA_DEVICE_ASSET_CLASS).orElseThrow();
         DeviceParameterPath = container.isDevMode() ? Paths.get("../deployment/manager/fleet/FMC003.json") : Paths.get("/deployment/manager/fleet/FMC003.json");
         config = TeltonikaConfigurationFactory.createConfiguration(assetStorageService, timerService, getParameterFileString());
         if (!identityService.isKeycloakEnabled()) {
@@ -195,20 +202,20 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     /**
      * Creates a filter for the AttributeEvents that could send a command to a Teltonika Device.
      *
-     * @return AssetFilter of CarAssets that have both {@code getConfig().getResponseAttribute().getName()} and
+     * @return AssetFilter of VehicleAssets that have both {@code getConfig().getResponseAttribute().getName()} and
      * {@code getConfig().getCommandAttribute().getValue().orElse("sendToDevice")} as attributes.
      */
     private AssetFilter<AttributeEvent> buildCommandAssetFilter(){
 
         List<Asset<?>> assetsWithAttribute = assetStorageService
-            .findAll(new AssetQuery().types(CarAsset.class)
+            .findAll(new AssetQuery().types(VehicleAsset.class)
                 .attributeNames(getConfig().getCommandAttribute().getValue().orElse("sendToDevice")));
-        List<String> listOfCarAssetIds = assetsWithAttribute.stream()
+        List<String> listOfVehicleAssetIds = assetsWithAttribute.stream()
             .map(Asset::getId)
             .toList();
 
         AssetFilter<AttributeEvent> event = new AssetFilter<>();
-        event.setAssetIds(listOfCarAssetIds.toArray(new String[0]));
+        event.setAssetIds(listOfVehicleAssetIds.toArray(new String[0]));
         event.setAttributeNames(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"));
         return event;
     }
@@ -222,7 +229,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         // If this is not an AttributeEvent that updates a getConfig().getCommandAttribute().getValue().orElse("sendToDevice") field, ignore
         if (!Objects.equals(event.getName(), getConfig().getCommandAttribute().getValue().orElse("sendToDevice"))) return;
         //Find the asset in question
-        CarAsset asset = assetStorageService.find(event.getId(), CarAsset.class);
+        VehicleAsset asset = assetStorageService.find(event.getId(), VehicleAsset.class);
 
         // Double check, remove later, sanity checks
         if(asset.hasAttribute(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"))){
@@ -232,7 +239,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 Optional<Attribute<String>> imei;
                 String imeiString;
                 try {
-                    imei = asset.getAttribute(CarAsset.IMEI);
+                    imei = asset.getAttribute(VehicleAsset.IMEI);
                     if(imei.isEmpty()) throw new Exception();
                     if(imei.get().getValue().isEmpty()) throw new Exception();
                     imeiString = imei.get().getValue().get();
@@ -243,7 +250,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 }
 
                 // Get the device subscription information, and even if it's subscribed
-                TeltonikaMQTTHandler.TeltonikaDevice deviceInfo = connectionSubscriberInfoMap.get(imeiString);
+                TeltonikaDevice deviceInfo = connectionSubscriberInfoMap.get(imeiString);
                 //If it's null, the device is not subscribed, leave
                 if(deviceInfo == null) {
                     getLogger().info(String.format("Device %s is not subscribed to topic, not posting message",
@@ -264,13 +271,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     }
 
     /**
-     * Sends a Command to the {@link TeltonikaMQTTHandler.TeltonikaDevice} in the correct format.
+     * Sends a Command to the {@link TeltonikaDevice} in the correct format.
      *
      * @param command string of the command, without preformatting.
      * List of valid commands can be found in Teltonika's website.
-     * @param device A {@link TeltonikaMQTTHandler.TeltonikaDevice} that is currently subscribed, to which to send the message to.
+     * @param device A {@link TeltonikaDevice} that is currently subscribed, to which to send the message to.
      */
-    private void sendCommandToTeltonikaDevice(String command, TeltonikaMQTTHandler.TeltonikaDevice device) {
+    private void sendCommandToTeltonikaDevice(String command, TeltonikaDevice device) {
         mqttBrokerService.publishMessage(device.commandTopic, Map.of("CMD", command), MqttQoS.EXACTLY_ONCE);
     }
 
@@ -335,7 +342,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     public void onSubscribe(RemotingConnection connection, Topic topic) {
         getLogger().info("CONNECT: Device "+topic.getTokens().get(1)+" connected to topic "+topic+".");
 
-        connectionSubscriberInfoMap.put(topic.getTokens().get(3), new TeltonikaMQTTHandler.TeltonikaDevice(topic));
+        connectionSubscriberInfoMap.put(topic.getTokens().get(3), new TeltonikaDevice(topic));
     }
 
     @Override
@@ -359,20 +366,20 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                 TELTONIKA_DEVICE_TOKEN + "/" + TOKEN_SINGLE_LEVEL_WILDCARD + "/" + TELTONIKA_DEVICE_SEND_TOPIC
         );
     }
-
-    private long startTimestamp = 0;
-    private long endTimestamp = 0;
+//
+//    private long startTimestamp = 0;
+//    private long endTimestamp = 0;
     @Override
     public void onPublish(RemotingConnection connection, Topic topic, ByteBuf body) {
-        startTimestamp = System.currentTimeMillis();
+//        startTimestamp = System.currentTimeMillis();
 	    ITeltonikaPayload payload = null;
         String deviceImei = topic.getTokens().get(3);
 
         String deviceUuid = UniqueIdentifierGenerator.generateId(deviceImei);
 
-        Asset<?> asset = assetStorageService.find(deviceUuid);
+        Asset<VehicleAsset> asset = assetStorageService.find(deviceUuid, VehicleAsset.class);
         String deviceModelNumber = asset != null
-                ? asset.getAttribute(CarAsset.MODEL_NUMBER).orElseThrow().getValue().orElse(getConfig().getDefaultModelNumber())
+                ? asset.getAttribute(VehicleAsset.MODEL_NUMBER).orElseThrow().getValue().orElse(getConfig().getDefaultModelNumber())
                 : getConfig().getDefaultModelNumber();
         if (deviceModelNumber == null){
             getLogger().fine("Device Model Number is null, setting to default");
@@ -391,7 +398,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             AttributeMap attributes;
             try{
                 Map<TeltonikaParameterData, Object> data = payload.getAttributesFromPayload(getConfig(), timerService);
-                attributes = payload.getAttributes(data, getConfig(), getLogger());
+                attributes = payload.getAttributes(data, getConfig(), getLogger(), TELTONIKA_DEVICE_ASSET_INFO.getAttributeDescriptors());
             }catch (JsonProcessingException e) {
                 getLogger().severe("Failed to getAttributesFromPayload");
                 getLogger().severe(e.toString());
@@ -413,8 +420,8 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             try{
                 if(getConfig().getStorePayloads().getValue().orElseThrow() && payload instanceof TeltonikaDataPayload){
                     Attribute<?> payloadAttribute = new Attribute<>("payload", CustomValueTypes.TELTONIKA_PAYLOAD, new TeltonikaDataPayloadModel(((TeltonikaDataPayload) payload).getState()));
-                    payloadAttribute.addMeta(new MetaItem<>(MetaItemType.STORE_DATA_POINTS, true));
-                    payloadAttribute.setTimestamp(attributes.get(CarAsset.LAST_CONTACT).orElseThrow().getValue().orElseThrow().getTime());
+                    payloadAttribute.addMeta(new MetaItem<>(STORE_DATA_POINTS, true));
+                    payloadAttribute.setTimestamp(attributes.get(VehicleAsset.LAST_CONTACT).orElseThrow().getValue().orElseThrow().getTime());
                     attributes.add(payloadAttribute);
                 }
             }catch (Exception ignored){}
@@ -461,7 +468,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
                             new MetaItem<>(READ_ONLY, true)
                         );
                         // Maybe set this to session.endTime?
-                        attributes.get(CarAsset.LAST_CONTACT).flatMap(Attribute::getValue)
+                        attributes.get(VehicleAsset.LAST_CONTACT).flatMap(Attribute::getValue)
                                 .ifPresent(val -> session.setTimestamp(val.getTime()));
                         attributes.add(session);
 
@@ -500,36 +507,54 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      */
     private void createNewAsset(String newDeviceId, String newDeviceImei, String realm, AttributeMap attributes) {
 
-        // This is where you would specify the Asset type that is inherited from the CarAsset class.
-        CarAsset testAsset = new CarAsset("Teltonika Asset "+newDeviceImei)
+        Asset<? extends VehicleAsset> newAsset = null;
+        try {
+            Constructor<? extends Asset<VehicleAsset>> constructor = TELTONIKA_DEVICE_ASSET_CLASS.getConstructor(String.class);
+		    newAsset = constructor.newInstance("Teltonika Asset " + newDeviceImei);
+	    } catch (NoSuchMethodException e) {
+		    getLogger().severe("Constructor for "+ TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName() +" not found with parameter String");
+            return;
+	    } catch (InvocationTargetException e) {
+            getLogger().severe("Constructor for "+ TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName() +" threw an exception");
+            return;
+	    } catch (InstantiationException e) {
+		    getLogger().severe("The Class" + TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName() + " is abstract or an interface, and cannot be instantiated.");
+            return;
+	    } catch (IllegalAccessException e) {
+            getLogger().severe("The Constructor for " + TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName() + " is not accessible (Could be private, or in general we do not have the needed access modifiers).");
+            return;
+	    }
+
+	    newAsset = newAsset
             .setRealm(realm)
             .setModelNumber(getConfig().getDefaultModelNumber())
             .setId(newDeviceId);
 
-        testAsset.getAttribute(CarAsset.LOCATION).ifPresentOrElse(
+        newAsset.getAttribute(VehicleAsset.LOCATION).ifPresentOrElse(
                 attr -> attr.addMeta(new MetaItem<>(STORE_DATA_POINTS, true)),
-                () -> getLogger().warning("Couldn't find CarAsset.LOCATION")
+                () -> getLogger().warning("Couldn't find "+TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName()+".LOCATION")
         );
 
-        testAsset.getAttributes().add(new Attribute<>(CarAsset.IMEI, newDeviceImei));
+        newAsset.getAttributes().add(new Attribute<>(VehicleAsset.IMEI, newDeviceImei));
 
         // Create Command and Response Attributes
         Attribute<String> command = new Attribute<>(new AttributeDescriptor<>(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
-        testAsset.getAttributes().add(command);
+        newAsset.getAttributes().add(command);
 //        Attribute<String> response = new Attribute<>(new AttributeDescriptor<>(getConfig().getResponseAttribute().getValue().orElse("sendToDevice"), ValueType.TEXT), "");
-//        testAsset.getAttributes().add(response);
+//        newAsset.getAttributes().add(response);
 
 
         //Now that the asset is created and IMEI is set, pull the packet timestamp, and then
         //set each of the asset's attributes to have that timestamp.
 
-        attributes.get(CarAsset.LAST_CONTACT).flatMap(Attribute::getValue).ifPresent(dateVal -> {
-            testAsset.setCreatedOn(dateVal);
-            testAsset.getAttributes().forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
+        Asset<? extends  Asset<VehicleAsset>> finalNewAsset = newAsset;
+        attributes.get(VehicleAsset.LAST_CONTACT).flatMap(Attribute::getValue).ifPresent(dateVal -> {
+            finalNewAsset.setCreatedOn(dateVal);
+            finalNewAsset.getAttributes().forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
             attributes.forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
         });
 
-        updateAsset(testAsset, attributes);
+        updateAsset(finalNewAsset, attributes);
     }
 
 
@@ -666,13 +691,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * @param asset The asset to be updated.
      * @param attributes The attributes to be upserted to the Attribute.
      */
-    private void updateAsset(Asset<?> asset, AttributeMap attributes) {
-        String imei = asset.getAttribute(CarAsset.IMEI)
+    private void updateAsset(Asset<? extends  Asset<VehicleAsset>> asset, AttributeMap attributes) {
+        String imei = asset.getAttribute(VehicleAsset.IMEI)
                 .orElse(new Attribute<>("IMEI", ValueType.TEXT, "Not Found"))
                 .getValue()
                 .orElse("Couldn't Find IMEI");
 
-        getLogger().info("Updating "+ attributes.stream().count() +" attributes of CarAsset with IMEI " + imei + " at Timestamp " + attributes.get(CarAsset.LAST_CONTACT));
+        getLogger().info("Updating "+ attributes.stream().count() +" attributes of "+TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName()+" with IMEI " + imei + " at Timestamp " + attributes.get(VehicleAsset.LAST_CONTACT));
 
         AttributeMap nonExistingAttributes = new AttributeMap();
         AttributeMap existingAttributes = new AttributeMap();
@@ -703,7 +728,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         }));
         endTimestamp = System.currentTimeMillis();
 
-        getLogger().info("Updated CarAsset in " + (endTimestamp - startTimestamp) + "ms");
+//        getLogger().info("Updated "+TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName()+" in " + (endTimestamp - startTimestamp) + "ms");
     }
 
 }

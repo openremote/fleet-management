@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.openremote.model.value.MetaItemType.*;
+
 @Entity
 public class TeltonikaModelConfigurationAsset extends Asset<TeltonikaModelConfigurationAsset> {
     public static final AttributeDescriptor<String> MODEL_NUMBER = new AttributeDescriptor<>("modelNumber", ValueType.TEXT);
@@ -67,6 +69,19 @@ public class TeltonikaModelConfigurationAsset extends Asset<TeltonikaModelConfig
 
         return map.flatMap(Attribute::getValue)
                 .orElse(new CustomValueTypes.TeltonikaParameterMap()); // or provide a default value other than null, if appropriate
+    }
+
+    public static MetaMap getPayloadAttributeMeta(String label){
+        MetaMap map = new MetaMap();
+
+        map.addAll(
+                new MetaItem<>(STORE_DATA_POINTS, true),
+                new MetaItem<>(RULE_STATE, true),
+                new MetaItem<>(READ_ONLY, true),
+                new MetaItem<>(LABEL, label)
+        );
+
+        return map;
     }
 
 }
