@@ -5,6 +5,7 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.model.asset.Asset;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
+import org.openremote.model.value.AttributeDescriptor;
 
 import java.util.Map;
 import java.util.logging.Logger;
@@ -20,5 +21,5 @@ public interface ITeltonikaPayload {
 	 */
 	Map<TeltonikaParameterData, Object> getAttributesFromPayload(TeltonikaConfiguration config, TimerService timerService) throws JsonProcessingException;
 
-	AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger);
+	AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger, Map<String, AttributeDescriptor<?>> descs);
 }

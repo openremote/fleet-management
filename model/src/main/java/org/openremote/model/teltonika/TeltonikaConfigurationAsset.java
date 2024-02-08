@@ -21,7 +21,7 @@ public class TeltonikaConfigurationAsset extends Asset<TeltonikaConfigurationAss
     public static final AttributeDescriptor<String> DEFAULT_MODEL_NUMBER = new AttributeDescriptor<>("defaultModelNumber", ValueType.TEXT);
     public static final AttributeDescriptor<String> COMMAND = new AttributeDescriptor<>("command", ValueType.TEXT);
     public static final AttributeDescriptor<String> RESPONSE = new AttributeDescriptor<>("response", ValueType.TEXT)
-            .withMeta(new MetaMap(Map.of(MetaItemType.READ_ONLY.getName(), new MetaItem<>(MetaItemType.READ_ONLY, true))));
+            .withMeta(TeltonikaModelConfigurationAsset.getPayloadAttributeMeta("Response from device command"));
 
 
     public static final AssetDescriptor<TeltonikaConfigurationAsset> DESCRIPTOR = new AssetDescriptor<>("gear", null, TeltonikaConfigurationAsset.class);

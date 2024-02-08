@@ -3,27 +3,10 @@ package org.openremote.model.teltonika;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.openremote.model.Constants;
-import org.openremote.model.asset.Asset;
-import org.openremote.model.attribute.Attribute;
-import org.openremote.model.attribute.AttributeMap;
-import org.openremote.model.attribute.MetaItem;
-import org.openremote.model.attribute.MetaMap;
-import org.openremote.model.custom.CarAsset;
-import org.openremote.model.geo.GeoJSONPoint;
-import org.openremote.model.util.ValueUtil;
-import org.openremote.model.value.*;
 
-import java.io.Serial;
 import java.io.Serializable;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.*;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static org.openremote.model.value.MetaItemType.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "reported"

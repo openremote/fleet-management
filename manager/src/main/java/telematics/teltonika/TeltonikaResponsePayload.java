@@ -8,6 +8,7 @@ import org.openremote.container.timer.TimerService;
 import org.openremote.model.attribute.Attribute;
 import org.openremote.model.attribute.AttributeMap;
 import org.openremote.model.teltonika.TeltonikaParameter;
+import org.openremote.model.value.AttributeDescriptor;
 
 import java.util.Map;
 import java.util.logging.Logger;
@@ -63,7 +64,7 @@ public class TeltonikaResponsePayload implements ITeltonikaPayload {
         return Map.of(parameter, rsp);
     }
 
-    public AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger) {
+    public AttributeMap getAttributes(Map<TeltonikaParameterData, Object> payloadMap, TeltonikaConfiguration config, Logger logger, Map<String, AttributeDescriptor<?>> descs) {
         AttributeMap attributeMap = new AttributeMap();
 
         Attribute<String> attribute = config.getResponseAttribute();
