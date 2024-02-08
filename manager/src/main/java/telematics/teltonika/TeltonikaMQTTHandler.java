@@ -726,7 +726,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 //            LOG.info("Publishing to client inbound queue: " + attribute.getName());
             assetProcessingService.sendAttributeEvent(attributeEvent);
         }));
-        endTimestamp = System.currentTimeMillis();
+//        endTimestamp = System.currentTimeMillis();
 
 //        getLogger().info("Updated "+TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName()+" in " + (endTimestamp - startTimestamp) + "ms");
     }
