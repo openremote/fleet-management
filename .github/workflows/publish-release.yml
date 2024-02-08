@@ -31,8 +31,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            pankalog/fleet-deployment:${{ env.GIT_DEPLOYMENT_VERSION }}
-            pankalog/fleet-deployment:latest
+            pankalog/test-deployment:${{ env.GIT_DEPLOYMENT_VERSION }}
+            pankalog/test-deployment:latest
           builder: multi-platform-builder
 
       - name: Build and push Fleet Management Image
@@ -43,8 +43,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/fleet-management:${{ env.GIT_DEPLOYMENT_VERSION }}
-            ${{ secrets.DOCKER_USERNAME }}/fleet-management:latest
+            ${{ secrets.DOCKER_USERNAME }}/fleet-test:${{ env.GIT_DEPLOYMENT_VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/fleet-test:latest
           builder: multi-platform-builder
 
       - name: Create Release
@@ -60,5 +60,5 @@ jobs:
             ${{ env.COMMIT_LOG }}
             
             ## Docker Images
-            - [Fleet Deployment Image](https://hub.docker.com/r/{{ secrets.DOCKER_USERNAME }}/fleet-deployment/tags?page=1&name=${{ env.GIT_DEPLOYMENT_VERSION }})
-            - [Fleet Management Image](https://hub.docker.com/r/{{ secrets.DOCKER_USERNAME }}/fleet-management/tags?page=1&name=${{ env.GIT_DEPLOYMENT_VERSION }})
+            - [Fleet Deployment Image](https://hub.docker.com/r/{{ secrets.DOCKER_USERNAME }}/test-deployment/tags?page=1&name=${{ env.GIT_DEPLOYMENT_VERSION }})
+            - [Fleet Management Image](https://hub.docker.com/r/{{ secrets.DOCKER_USERNAME }}/fleet-test/tags?page=1&name=${{ env.GIT_DEPLOYMENT_VERSION }})
