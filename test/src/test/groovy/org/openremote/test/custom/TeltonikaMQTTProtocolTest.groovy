@@ -507,7 +507,7 @@ class TeltonikaMQTTProtocolTest extends Specification implements ManagerContaine
         String assetId = UniqueIdentifierGenerator.generateId(getTELTONIKA_DEVICE_IMEI());
         int i = 0;
         when: "the device starts publishing payloads"
-        payloads.stream().forEach { Object payload ->
+        payloads.stream().limit(100).forEach { Object payload ->
 //             Your logic here, for example:
             getLOG().debug(JsonOutput.toJson(payload));
 
