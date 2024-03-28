@@ -3228,15 +3228,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@openremote/custom@workspace:ui/app/fleet":
-  version: 0.0.0-use.local
-  resolution: "@openremote/custom@workspace:ui/app/fleet"
-  dependencies:
-    "@openremote/manager": "workspace:*"
-    "@openremote/util": "workspace:*"
-  languageName: unknown
-  linkType: soft
-
 "@openremote/demo-core@npm:^1.0.4, @openremote/demo-core@workspace:openremote/ui/demo/demo-core":
   version: 0.0.0-use.local
   resolution: "@openremote/demo-core@workspace:openremote/ui/demo/demo-core"
@@ -3319,7 +3310,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@openremote/manager@workspace:*, @openremote/manager@workspace:openremote/ui/app/manager":
+"@openremote/manager@workspace:openremote/ui/app/manager":
   version: 0.0.0-use.local
   resolution: "@openremote/manager@workspace:openremote/ui/app/manager"
   dependencies:
