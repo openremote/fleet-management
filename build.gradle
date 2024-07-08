@@ -35,7 +35,6 @@ allprojects {
 //    }
 //    args.add("git")
 //    args.add("check-ignore")
-//    args.add("-q")
 //    args.addAll(project.getProperties().get("gradleFileEncrypt").plainFiles)
 //
 //    commandLine args
