@@ -278,7 +278,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * @param device A {@link TeltonikaDevice} that is currently subscribed, to which to send the message to.
      */
     private void sendCommandToTeltonikaDevice(String command, TeltonikaDevice device) {
-        mqttBrokerService.publishMessage(device.commandTopic, Map.of("CMD", command), MqttQoS.EXACTLY_ONCE);
+        publishMessage(device.commandTopic, Map.of("CMD", command), MqttQoS.EXACTLY_ONCE);
     }
 
     @Override
