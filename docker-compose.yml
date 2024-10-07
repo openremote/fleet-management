@@ -108,7 +108,7 @@ services:
 #    <<: *awslogs
 
   manager:
-    image: pankalog/fleet-management:${MANAGER_VERSION:-latest}
+    image: pankalog/fleet-management:${DEPLOYMENT_VERSION:-latest}
     restart: always
     depends_on:
       keycloak:
