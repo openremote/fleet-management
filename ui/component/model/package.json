@@ -1,0 +1,30 @@
+{
+  "name": "model",
+  "version": "1.0.0",
+  "description": "Model Types",
+  "main": "dist/umd/index.bundle.js",
+  "module": "lib/index.js",
+  "private": true,
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "scripts": {
+    "build": "npx tsc -b --force",
+    "test": "echo \"No tests\" && exit 0",
+    "prepublishOnly": "npx tsc -b"
+  },
+  "author": "OpenRemote",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "@openremote/util": "^1.2.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

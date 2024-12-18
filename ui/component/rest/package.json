@@ -1,0 +1,37 @@
+{
+  "name": "rest",
+  "version": "1.0.0",
+  "description": "REST API",
+  "main": "dist/umd/index.bundle.js",
+  "private": true,
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": "./lib/index.js",
+    "./*": "./lib/*.js"
+  },
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "scripts": {
+    "build": "npx tsc -b",
+    "test": "echo \"No tests\" && exit 0",
+    "prepublishOnly": "npx webpack"
+  },
+  "author": "OpenRemote",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@openremote/rest": "^1.2.0",
+    "axios": "0.24.0",
+    "model": "workspace:*",
+    "qs": "^6.8.0"
+  },
+  "devDependencies": {
+    "@openremote/util": "^1.2.0",
+    "@types/qs": "^6.9.7"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

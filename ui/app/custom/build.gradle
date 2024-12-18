@@ -1,10 +1,10 @@
 buildDir = "dist"
 
-task clean {
+tasks.register('clean') {
     dependsOn npmClean
 }
 
-task installDist(type: Copy) {
+tasks.register('installDist', Copy) {
     dependsOn npmBuild
     mustRunAfter(resolveTask(":manager:installDist"))
     from project.buildDir

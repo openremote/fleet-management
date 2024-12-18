@@ -4,9 +4,12 @@ dependencies {
     api project(":setup")
 }
 
-task license {
+tasks.register('license') {
     doLast {
-        def toConcatenate = files("${project(":openremote").projectDir}/LICENSE.txt", "${rootDir}/LICENSE.txt")
+        def licenseFiles = new ArrayList<>()
+        licenseFiles.add("${rootDir}/LICENSE.txt")
+
+        def toConcatenate = files(licenseFiles.toArray())
         def outputFileName = "${buildDir}/image/manager/app/LICENSE.txt"
         def output = new File(outputFileName)
         if (output.exists()) {
@@ -19,8 +22,9 @@ task license {
     }
 }
 
-task installDist(type: Copy) {
-    dependsOn (parent.getTasksByName('installDist', true).findAll {
+tasks.register('installDist', Copy) {
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    dependsOn(parent.getTasksByName('installDist', true).findAll {
         // Don't create circular dependency or depend on built in openremote submodule apps
         it.project != project && !it.project.path.startsWith(":openremote:ui:app")
     })

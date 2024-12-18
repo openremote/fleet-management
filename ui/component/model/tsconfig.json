@@ -3,13 +3,9 @@
   "compilerOptions": {
     "outDir": "./lib",
     "rootDir": "src",
-    "strict": false
+    "preserveConstEnums": true
   },
   "include": [
     "./src"
-  ],
-  "references": [
-    { "path": "../../component/model" },
-    { "path": "../../component/rest" }
   ]
 }

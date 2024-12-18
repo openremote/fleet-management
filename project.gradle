@@ -1,0 +1,402 @@
+// Common configuration applied to all projects
+import java.nio.file.*
+import java.nio.file.attribute.*
+import java.util.stream.Collectors
+import java.util.stream.Stream
+import java.util.stream.StreamSupport
+
+import static org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS
+import static org.apache.tools.ant.taskdefs.condition.Os.isFamily
+import static org.jetbrains.gradle.ext.ShortenCommandLine.MANIFEST
+import org.jetbrains.gradle.ext.Application
+import org.jetbrains.gradle.ext.JUnit
+
+
+configurations.all {
+    resolutionStrategy {
+
+        // check for changing (i.e. SNAPSHOT) updates every build
+        cacheChangingModulesFor 0, 'seconds'
+
+        //failOnVersionConflict()
+
+        // This has been replaced with eclipse angus implementation
+        exclude group: "com.sun.activation", module: "jakarta.activation"
+
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.eclipse.angus' && details.requested.name == 'angus-activation' && details.requested.version == '1.0.0') {
+                details.useVersion '2.0.0'
+            }
+        }
+    }
+}
+
+// Ensure git hook creation task is executed
+if (project == rootProject) {
+
+    project.afterEvaluate {
+
+        if (rootProject.hasProperty("gradleFileEncrypt")) {
+            println("File encryption plugin config found, configuring git pre commit hook and decrypt task dependency")
+            try {
+                // Write git hook for encryption plugin checks before any commit
+                def path = Paths.get(rootProject.projectDir.path, ".git/hooks/pre-commit")
+                def f = path.toFile()
+                f.text = """#!/bin/sh
+
+echo "***** Running gradle encryption plugin checkFilesGitIgnored task ******"
+
+./gradlew checkFilesGitIgnoredNew
+
+status=\$?
+
+if [ \$status != 0 ]; then
+   echo "***** One or more encrypted files are not listed in a .gitignore - please add to prevent unencrypted version of file(s) from being committed *****"
+fi
+
+exit \$status
+"""
+                Set<PosixFilePermission> perms = Files.readAttributes(path, PosixFileAttributes.class).permissions()
+                perms.add(PosixFilePermission.OWNER_WRITE)
+                perms.add(PosixFilePermission.OWNER_READ)
+                perms.add(PosixFilePermission.OWNER_EXECUTE)
+                perms.add(PosixFilePermission.GROUP_WRITE)
+                perms.add(PosixFilePermission.GROUP_READ)
+                perms.add(PosixFilePermission.GROUP_EXECUTE)
+                perms.add(PosixFilePermission.OTHERS_READ)
+                perms.add(PosixFilePermission.OTHERS_EXECUTE)
+                Files.setPosixFilePermissions(path, perms)
+            } catch (Exception ignored) {}
+
+            // Add dependency on decrypt task for deployment installDist only if GFE_PASSWORD defined
+            def password = System.env.GFE_PASSWORD
+            if (password != null) {
+                Task decryptTask = getTasksByName("decryptFiles", false)[0]
+
+                try {
+                    def installDist = tasks.getByPath(":deployment:installDist")
+                    installDist.dependsOn decryptTask
+                    installDist.mustRunAfter(decryptTask)
+                } catch (Exception ex) {
+                    println("Failed to add decryptFiles task dependency: " + ex)
+                }
+            }
+        } else {
+            // Remove git hook
+            try {
+                Files.delete(Paths.get(rootProject.projectDir.path, ".git/hooks/pre-commit"))
+            } catch (Exception ignored) {
+            }
+        }
+    }
+}
+
+
+// Configure Conditional plugins
+if (project == rootProject) {
+    apply plugin: "org.jetbrains.gradle.plugin.idea-ext"
+
+    // Configure IDEA
+    if (project.hasProperty("idea") && idea.project) {
+        // IDEA settings
+        idea.project.settings {
+            compiler {
+                javac {
+                    javacAdditionalOptions "-parameters"
+                }
+            }
+            runConfigurations {
+                defaults(JUnit) {
+                    shortenCommandLine = MANIFEST
+                    workingDirectory = projectDir.toString()
+                }
+                defaults(Application) {
+                    mainClass = 'org.openremote.manager.Main'
+                    shortenCommandLine = MANIFEST
+                    workingDirectory = projectDir.toString()
+                }
+                "Empty"(Application) {
+                    moduleName = getProject().idea.module.name + ".openremote.manager.main"
+                }
+            }
+        }
+
+        idea.project.settings.runConfigurations {
+            "Custom Deployment"(Application) {
+                moduleName = "${getProject().idea.module.name}.setup.main"
+                envs = [
+                    OR_MAP_SETTINGS_PATH: "deployment/map/mapsettings.json",
+                    OR_MAP_TILES_PATH: "deployment/map/mapdata.mbtiles",
+                    OR_CUSTOM_APP_DOCROOT: "deployment/manager/app",
+                    OR_CONSOLE_APP_CONFIG_DOCROOT: "deployment/manager/consoleappconfig"
+                ]
+            }
+        }
+    }
+}
+
+// Give test projects more memory (Gradle 5 reduced this to 512MB)
+subprojects {
+    tasks.withType(Test) {
+        maxHeapSize = "2g"
+    }
+}
+
+// Default repositories for dependency resolution
+repositories {
+    mavenLocal()
+    maven {
+        url = "https://repo.osgeo.org/repository/release/"
+    }
+    mavenCentral()
+    maven {
+        url "https://pkgs.dev.azure.com/OpenRemote/OpenRemote/_packaging/OpenRemote/maven/v1"
+    }
+    maven {
+        url "https://s01.oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
+// Eclipse needs help
+apply plugin: "eclipse"
+
+// Intellij needs help
+apply plugin: 'idea'
+// Use the same output directories in IDE as in gradle
+idea {
+    module {
+        outputDir file('build/classes/main')
+        testOutputDir file('build/classes/test')
+        excludeDirs += file(".node")
+        excludeDirs += file("node_modules")
+        excludeDirs += file("dist")
+        excludeDirs += file("lib")
+        excludeDirs += file("build")
+    }
+}
+
+/**
+ * This defines reusable config for the typescript generator plugin
+ */
+def createTSGeneratorConfigForModel(String outputFileName, Project...customProjectsToScan) {
+    def config = createTSGeneratorConfig(false, outputFileName, customProjectsToScan) <<
+            {
+                extensions = [
+                        "org.openremote.model.util.AssetModelInfoExtension",
+                        "CustomExtension",
+                        "JsonSerializeExtension"
+                ]
+                customTypeMappings = [
+                        "com.fasterxml.jackson.databind.node.ObjectNode:{ [id: string]: any }",
+                        "java.lang.Class<T>:string",
+                        "org.openremote.model.attribute.MetaItem<T>:any"
+                ]
+                customTypeProcessor = "CustomTypeProcessor"
+                generateInfoJson = true
+            }
+    return config
+}
+def createTSGeneratorConfigForClient(String outputFileName, File modelInfoJson, Project...customProjectsToScan) {
+    def config = createTSGeneratorConfig(true, outputFileName, customProjectsToScan) <<
+            {
+                extensions = [
+                        "CustomExtension",
+                        "JsonSerializeExtension",
+                        "CustomAggregatedApiClient",
+                        "cz.habarta.typescript.generator.ext.AxiosClientExtension"
+                ]
+                customTypeMappings = [
+                        "com.fasterxml.jackson.databind.node.ObjectNode:{ [id: string]: any }",
+                        "java.lang.Class<T>:string",
+                        "org.openremote.model.attribute.MetaItem<T>:any",
+                        "org.openremote.model.asset.Asset<T>:Model.Asset",
+                        "org.openremote.model.asset.AssetDescriptor<T>:Model.AssetDescriptor",
+                        "org.openremote.model.asset.agent.Agent<T,U,V>:Model.Agent",
+                        "org.openremote.model.asset.agent.AgentDescriptor<T,U,V>:Model.AgentDescriptor",
+                        "org.openremote.model.value.MetaItemDescriptor<T>:Model.MetaItemDescriptor",
+                        "org.openremote.model.value.ValueDescriptor<T>:Model.ValueDescriptor"
+                ]
+                moduleDependencies = [
+                        cz.habarta.typescript.generator.ModuleDependency.module(
+                                "model",
+                                "Model",
+                                modelInfoJson,
+                                (String) null,
+                                (String) null
+                        )
+                ]
+                restNamespacing = "perResource"
+            }
+    return config
+}
+def createTSGeneratorConfig(boolean outputAPIClient, String outputFileName, Project...customProjectsToScan) {
+
+    def classPatternGlobs = Arrays.stream(customProjectsToScan).flatMap { project ->
+        return project.sourceSets.findByName('main').java.srcDirs.stream().map {
+            def srcPath = it
+            def isPackageDir = true
+            while (srcPath != null && isPackageDir) {
+                def files = srcPath.listFiles()
+                isPackageDir = files != null && files.length == 1 && files[0].isDirectory()
+                if (isPackageDir) {
+                    srcPath = files[0]
+                }
+            }
+            Path packagePath = it.toPath().relativize(srcPath.toPath())
+            return StreamSupport
+                    .stream(packagePath.spliterator(), false)
+                    .map(Path::toString)
+                    .collect(Collectors.joining(".")) + (outputAPIClient ? ".**Resource" : ".**")
+        }
+    }.toList()
+
+    def baseClassPattern = outputAPIClient
+        ? customProjectsToScan.length == 0 ? [ "org.openremote.model.**Resource" ] : []
+        : [ "org.openremote.model.**" ]
+
+    return {
+        jsonLibrary = "jackson2"
+        classPatterns = baseClassPattern + classPatternGlobs
+        customTypeNamingFunction = "function(name, simpleName) { if (name.indexOf(\"\$\") > 0) return name.substr(name.lastIndexOf(\".\")+1).replace(\"\$\",\"\"); }"
+        excludeClassPatterns = [
+                "org.openremote.model.event.shared.*Filter**",
+                "org.openremote.model.util.**",
+                "org.openremote.model.flow.**",
+                "java.io.**",
+                "java.lang.**",
+                "org.hibernate.**",
+                "jakarta.**"
+        ]
+        mapEnum = cz.habarta.typescript.generator.EnumMapping.asEnum
+        mapDate = cz.habarta.typescript.generator.DateMapping.asNumber
+        optionalProperties = "all" // TODO: cleanup model to be more explicit about optional params
+        outputFileType = "implementationFile"
+        outputKind = "module"
+        outputFile = outputFileName
+        jackson2Configuration = [
+                fieldVisibility: "ANY",
+                creatorVisibility: "ANY",
+                getterVisibility: "NONE",
+                isGetterVisibility: "NONE",
+                setterVisibility: "NONE"
+        ]
+        jackson2Modules = [
+                "com.fasterxml.jackson.datatype.jdk8.Jdk8Module",
+                "com.fasterxml.jackson.datatype.jsr310.JavaTimeModule",
+                "com.fasterxml.jackson.module.paramnames.ParameterNamesModule"
+        ]
+    }
+}
+
+def resolveTask(String path) {
+    tasks.getByPath(path)
+}
+
+def getYarnInstallTask() {
+    def customPackageJsonFile = Paths.get(rootProject.projectDir.path, "package.json").toFile()
+    if (!customPackageJsonFile.exists()) {
+        // No custom project yarn package.json so use standard openremote repo package.json
+        return resolveTask(":yarnInstall")
+    } else {
+        return tasks.getByPath(":yarnInstall")
+    }
+}
+
+// Gets the list of runtime JAR dependencies; can be used in custom project deployment installDist task to populate
+// extensions directory
+def getDeploymentJars(Project project = project) {
+    if (project.configurations.find { it.name == "runtimeClasspath" } == null) {
+        return []
+    }
+
+    // Dependencies already part of the manager are excluded so they do not appear on the classpath twice
+    return project.configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+            .findAll { !it.file.path.contains(".gradle") && !it.file.path.contains(".m2") }
+            .collect {
+                println "CopyLibs Artifact: ${it.file.path}"
+                return it.file
+            }
+}
+
+ext {
+    resolveTask = this.&resolveTask
+    getYarnInstallTask = this.&getYarnInstallTask
+    getDeploymentJars = this.&getDeploymentJars
+    createTSGeneratorConfigForClient = this.&createTSGeneratorConfigForClient
+    createTSGeneratorConfigForModel = this.&createTSGeneratorConfigForModel
+}
+
+// Add UI tasks
+ext.npmCommand = {
+    cmd ->
+        isFamily(FAMILY_WINDOWS) ? "${cmd}.cmd" : cmd
+}
+
+// Add yarn tasks
+tasks.register('yarnInstall', Exec) {
+    commandLine npmCommand("yarn"), "install"
+}
+tasks.register('yarnInstallForce', Exec) {
+    commandLine npmCommand("yarn"), "install", "--force"
+}
+
+tasks.register('npmClean', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "clean"
+}
+tasks.register('npmBuild', Exec) {
+    mustRunAfter npmClean
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "build"
+}
+tasks.register('npmTest', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "test"
+}
+tasks.register('npmServe', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "serve"
+}
+tasks.register('npmPrepare', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "prepublishOnly"
+}
+tasks.register('npmPublish', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "publish"
+}
+tasks.register('npmServeProduction', Exec) {
+    dependsOn getYarnInstallTask()
+    commandLine npmCommand("yarn"), "run", "serveProduction"
+}
+
+// Add typescript tasks
+tasks.register('tscWatch', Exec) {
+    commandLine npmCommand("npx"), "tsc", "-b", "--watch"
+}
+
+// Configure Java build
+plugins.withType(JavaPlugin).whenPluginAdded {
+
+    // Use Java 17
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        def warnLogFile = file("$buildDir/${name}Warnings.log")
+        logging.addStandardErrorListener(new StandardOutputListener() {
+            void onOutput(CharSequence output) {
+                warnLogFile << output
+            }
+        })
+        options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-parameters"]
+        options.encoding = 'UTF-8'
+    }
+
+    // Allow dependencyInsight checks across all projects
+    tasks.register('allDependencyInsight', DependencyInsightReportTask) {}
+
+    // JAR/ZIP base name is the fully qualified subproject name
+    archivesBaseName = "${rootProject.name}${path.replaceAll(":", "-")}"
+}
+
+// POM generator

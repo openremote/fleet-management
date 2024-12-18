@@ -12,7 +12,7 @@ dependencies {
     api project(":manager")
     api project(":model")
     api project(":agent")
-    testImplementation(testFixtures(resolveProject(":test")))
+    testImplementation "io.openremote:openremote-test:$openremoteVersion"
 }
 
 tasks.withType(Test) {

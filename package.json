@@ -2,12 +2,11 @@
   "packageManager": "yarn@4.1.0",
   "private": true,
   "workspaces": [
-    "openremote",
     "ui/app/*",
     "ui/component/*",
     "ui/demo/*"
   ],
   "devDependencies": {
-    "lerna": "^4.0.0"
+    "@openremote/util": "^1.2.0"
   }
 }
