@@ -23,17 +23,30 @@ allprojects {
 //        return password.toCharArray()
 //    }
 //}
-//tasks.register('checkFilesGitIgnoredNew', Exec) {
-//    // The provided checkFilesGitIgnored task doesn't work on Windows so here's one that does
-//    def args = []
-//    if (org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)) {
-//        args.add("cmd")
-//        args.add("/c")
-//    }
-//    args.add("git")
-//    args.add("check-ignore")
-//    args.add("-q")
-//    args.addAll(project.getProperties().get("gradleFileEncrypt").plainFiles)
+//tasks.register('checkFilesGitIgnoredNew') {
+//    doLast {
+//        // The provided checkFilesGitIgnored task doesn't work on Windows so here's one that does
+//        def plainFiles = project.getProperties().get("gradleFileEncrypt").plainFiles
+//        plainFiles.each { plainFile ->
+//            def args = []
+//            if (org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)) {
+//                args.add("cmd")
+//                args.add("/c")
+//            }
+//            args.add("git")
+//            args.add("check-ignore")
+//            args.add("-q")
+//            args.add(plainFile) // Assuming plainFile is a single file path
 //
-//    commandLine args
+//            def result = project.exec {
+//                commandLine args
+//                ignoreExitValue = true // Allow the build to continue so we can check the exit value
+//            }
+//
+//            if (result.exitValue != 0) {
+//                throw new GradleException("Command execution failed for file ${plainFile} with exit code: ${result.exitValue}")
+//            }
+//        }
+//    }
 //}
+
