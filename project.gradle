@@ -102,7 +102,7 @@ if (project == rootProject) {
         idea.project.settings {
             compiler {
                 javac {
-                    javacAdditionalOptions "-parameters"
+                    javacAdditionalOptions = "-parameters"
                 }
             }
             runConfigurations {
@@ -150,10 +150,10 @@ repositories {
     }
     mavenCentral()
     maven {
-        url "https://pkgs.dev.azure.com/OpenRemote/OpenRemote/_packaging/OpenRemote/maven/v1"
+        url = "https://pkgs.dev.azure.com/OpenRemote/OpenRemote/_packaging/OpenRemote/maven/v1"
     }
     maven {
-        url "https://s01.oss.sonatype.org/content/repositories/snapshots"
+        url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
     }
 }
 
@@ -165,8 +165,8 @@ apply plugin: 'idea'
 // Use the same output directories in IDE as in gradle
 idea {
     module {
-        outputDir file('build/classes/main')
-        testOutputDir file('build/classes/test')
+        outputDir = file('build/classes/main')
+        testOutputDir = file('build/classes/test')
         excludeDirs += file(".node")
         excludeDirs += file("node_modules")
         excludeDirs += file("dist")
