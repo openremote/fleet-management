@@ -6,12 +6,12 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.keycloak.KeycloakSecurityContext;
 import org.openremote.container.timer.TimerService;
+import org.openremote.model.protocol.mqtt.Topic;
 import org.openremote.model.util.UniqueIdentifierGenerator;
 import org.openremote.manager.asset.AssetProcessingService;
 import org.openremote.manager.asset.AssetStorageService;
 import org.openremote.manager.datapoint.AssetDatapointService;
 import org.openremote.manager.mqtt.MQTTHandler;
-import org.openremote.manager.mqtt.Topic;
 import org.openremote.manager.security.ManagerIdentityService;
 import org.openremote.manager.security.ManagerKeycloakIdentityProvider;
 import org.openremote.model.Container;
@@ -41,6 +41,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.openremote.model.syslog.SyslogCategory.API;
@@ -56,11 +57,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         String commandTopic;
 
         public TeltonikaDevice(Topic topic) {
-            this.clientId = topic.getTokens().get(1);
+            this.clientId = topic.getTokens()[1];
             this.commandTopic = String.format("%s/%s/teltonika/%s/commands",
                 topicRealm(topic),
                 this.clientId,
-                topic.getTokens().get(3));
+                topic.getTokens()[3]);
         }
     }
 
@@ -115,7 +116,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         AssetDatapointService = container.getService(AssetDatapointService.class);
         timerService = container.getService(TimerService.class);
         TELTONIKA_DEVICE_ASSET_INFO = ValueUtil.getAssetInfo(TELTONIKA_DEVICE_ASSET_CLASS).orElseThrow();
-        DeviceParameterPath = container.isDevMode() ? Paths.get("../deployment/manager/fleet/FMC003.json") : Paths.get("/deployment/manager/fleet/FMC003.json");
+        DeviceParameterPath = container.isDevMode() ? Paths.get("./deployment/manager/fleet/FMC003.json") : Paths.get("/deployment/manager/fleet/FMC003.json");
         config = TeltonikaConfigurationFactory.createConfiguration(assetStorageService, timerService, getParameterFileString());
         if (!identityService.isKeycloakEnabled()) {
             isKeycloak = false;
@@ -133,13 +134,13 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         }
 
         // Internal Subscription for the command attribute
-        clientEventService.addInternalSubscription(
+        clientEventService.addSubscription(
             AttributeEvent.class,
             null,
             this::handleAttributeMessage);
 
         //Internal Subscription for the Asset Configuration
-        clientEventService.addInternalSubscription(
+        clientEventService.addSubscription(
                 AttributeEvent.class,
                 null,
                 this::handleAssetConfigurationChange
@@ -303,22 +304,22 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     // To be removed when auto-provisioning works
     @Override
     public boolean canSubscribe(RemotingConnection connection, KeycloakSecurityContext securityContext, Topic topic) {
-        if(topic.getTokens().size() < 5){
-            getLogger().warning(MessageFormat.format("Topic {0} is not a valid Topic. Please use a valid Topic.", topic.getString()));
+        if(topic.getTokens().length < 5){
+            getLogger().warning(MessageFormat.format("Topic {0} is not a valid Topic. Please use a valid Topic.", topic.toString()));
             return false;
         }
         long imeiValue;
         try{
-            imeiValue = Long.parseLong(topic.getTokens().get(3));
+            imeiValue = Long.parseLong(topic.getTokens()[3]);
         }catch (NumberFormatException e){
-            getLogger().warning(MessageFormat.format("IMEI {0} is not a valid IMEI value. Please use a valid IMEI value.", topic.getTokens().get(3)));
+            getLogger().warning(MessageFormat.format("IMEI {0} is not a valid IMEI value. Please use a valid IMEI value.", topic.getTokens()[3]));
             return false;
         }
-        return Objects.equals(topic.getTokens().get(2), TELTONIKA_DEVICE_TOKEN) &&
+        return Objects.equals(topic.getTokens()[2], TELTONIKA_DEVICE_TOKEN) &&
             (getConfig().getCheckForImei() ? IMEIValidator.isValidIMEI(imeiValue) : true) &&
             (
-                Objects.equals(topic.getTokens().get(4), TELTONIKA_DEVICE_RECEIVE_TOPIC) ||
-                    Objects.equals(topic.getTokens().get(4), TELTONIKA_DEVICE_SEND_TOPIC)
+                Objects.equals(topic.getTokens()[4], TELTONIKA_DEVICE_RECEIVE_TOPIC) ||
+                    Objects.equals(topic.getTokens()[4], TELTONIKA_DEVICE_SEND_TOPIC)
             );
     }
 
@@ -334,22 +335,22 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     }
 
     @Override
-    public boolean canPublish(RemotingConnection connection, KeycloakSecurityContext securityContext, Topic topic) {
+    public boolean canPublish(RemotingConnection connection, KeycloakSecurityContext securityContext, org.openremote.model.protocol.mqtt.Topic topic) {
         getLogger().finer("Teltonika device will publish to Topic "+topic.toString()+" to transmit payload");
         return true;
     }
 
     public void onSubscribe(RemotingConnection connection, Topic topic) {
-        getLogger().info("CONNECT: Device "+topic.getTokens().get(1)+" connected to topic "+topic+".");
+        getLogger().info("CONNECT: Device "+topic.getTokens()[1]+" connected to topic "+topic+".");
 
-        connectionSubscriberInfoMap.put(topic.getTokens().get(3), new TeltonikaDevice(topic));
+        connectionSubscriberInfoMap.put(topic.getTokens()[3], new TeltonikaDevice(topic));
     }
 
     @Override
     public void onUnsubscribe(RemotingConnection connection, Topic topic) {
-        getLogger().info("DISCONNECT: Device "+topic.getTokens().get(1)+" disconnected from topic "+topic+".");
+        getLogger().info("DISCONNECT: Device "+topic.getTokens()[1]+" disconnected from topic "+topic+".");
 
-        connectionSubscriberInfoMap.remove(topic.getTokens().get(3));
+        connectionSubscriberInfoMap.remove(topic.getTokens()[3]);
     }
 
     /**
@@ -373,7 +374,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
     public void onPublish(RemotingConnection connection, Topic topic, ByteBuf body) {
 //        startTimestamp = System.currentTimeMillis();
 	    ITeltonikaPayload payload = null;
-        String deviceImei = topic.getTokens().get(3);
+        String deviceImei = topic.getTokens()[3];
 
         String deviceUuid = UniqueIdentifierGenerator.generateId(deviceImei);
 
@@ -391,8 +392,14 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             getLogger().severe(e.toString());
             return;
         }
-        String realm = topic.getTokens().get(0);
-        String clientId = topic.getTokens().get(1);
+        String realm = topic.getTokens()[0];
+        String clientId = topic.getTokens()[1];
+
+        try {
+            getLogger().log(Level.WARNING, ValueUtil.JSON.writeValueAsString(body.toString(StandardCharsets.UTF_8)));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             AttributeMap attributes;
@@ -599,7 +606,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         // If there are no historical data found, add some first
         if(list.isEmpty()) {
             list.add(
-                    new ValueDatapoint(
+                    new ValueDatapoint<>(
                                     timerService.getCurrentTimeMillis(),
                                     new AssetStateDuration(
                                             new Timestamp(previousValue.getTimestamp().get()),
@@ -716,16 +723,16 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
             assetStorageService.merge(asset);
         }
 
-        existingAttributes.forEach(attribute -> attribute.getTimestamp().ifPresent(timestamp -> {
+        existingAttributes.forEach(attribute -> {
             AttributeEvent attributeEvent = new AttributeEvent(
                     asset.getId(),
                     attribute.getName(),
                     attribute.getValue().orElseThrow(),
-                    timestamp
+                    attribute.getTimestamp().orElse(0L)
             );
 //            LOG.info("Publishing to client inbound queue: " + attribute.getName());
             assetProcessingService.sendAttributeEvent(attributeEvent);
-        }));
+        });
 //        endTimestamp = System.currentTimeMillis();
 
 //        getLogger().info("Updated "+TELTONIKA_DEVICE_ASSET_CLASS.getSimpleName()+" in " + (endTimestamp - startTimestamp) + "ms");

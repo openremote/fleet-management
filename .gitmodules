@@ -1,5 +1,0 @@
-[submodule "openremote"]
-    path = openremote
-    url = https://github.com/openremote/openremote.git
-    branch = feature/fleet-management
-    update = rebase

@@ -1,0 +1,78 @@
+apply plugin: "groovy"
+apply plugin: "cz.habarta.typescript-generator"
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "cz.habarta.typescript-generator:typescript-generator-gradle-plugin:$typescriptGeneratorVersion"
+    }
+}
+
+dependencies {
+    compileOnly "io.openremote:openremote-model-util:$openremoteVersion"
+    implementation project(":agent")
+    implementation project(":model")
+    implementation "cz.habarta.typescript-generator:typescript-generator-core:$typescriptGeneratorVersion"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
+    implementation "com.fasterxml.jackson.module:jackson-module-parameter-names:$jacksonVersion"
+}
+
+generateTypeScript createTSGeneratorConfigForClient("src/restclient.ts", new File("${project(":ui:component:model").projectDir}/src/typescript-generator-info.json"), project(":model"))
+generateTypeScript.dependsOn resolveTask(":ui:component:model:generateTypeScript")
+generateTypeScript.onlyIf { countResourceClasses() > 0 }
+npmBuild.onlyIf { countResourceClasses() > 0 }
+tasks.register('dummyRestClient') {
+    onlyIf { countResourceClasses() == 0 }
+    doLast {
+        file("${projectDir}/src/restclient.ts").text = 'export class ApiClient {}'
+    }
+}
+generateTypeScript.finalizedBy dummyRestClient
+
+def countResourceClasses() {
+    // Get the main source set's output classes directory
+    def classesDir = project(":model").sourceSets.main.output.classesDirs
+    def count = 0
+
+    // Iterate through all class files
+    classesDir.files.each { dir ->
+        dir.eachFileRecurse { file ->
+            if (file.name.endsWith('.class')) {
+                // Convert file path to class name and check if it ends with "Resource"
+                def className = file.absolutePath
+                        .substring(classesDir.asPath.length() + 1)
+                        .replace(File.separator, '.')
+                        .replace('.class', '')
+
+                if (className.endsWith('Resource')) {
+                    count++
+                }
+
+            }
+        }
+    }
+
+    println "Total classes ending with 'Resource': $count"
+    return count
+}
+
+clean {
+    doLast {
+        def dir = new File("${projectDir}/dist")
+        dir.deleteDir()
+    }
+}
+
+build.dependsOn generateTypeScript, npmBuild
+npmBuild.dependsOn generateTypeScript
+
+tasks.register('prepareUi') {
+    dependsOn clean, build, npmPrepare
+}
+
+tasks.register('publishUi') {
+    dependsOn clean, build, npmPublish
+}

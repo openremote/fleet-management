@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,12 +129,11 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 							}
 						}
 
-						// Check if the entry was found
-						if (desiredEntry != null) {
-							return desiredEntry;
-						} else {
-							throw new IllegalArgumentException("Key " + entry.getValue().toString() + " not found in finalParams");
-						}
+                        if (desiredEntry == null) {
+                            getLogger().log(Level.WARNING, "Could not find Teltonika Parameter with ID " + entry.getKey() + ". Adding as unknown parameter.");
+                            desiredEntry = new TeltonikaParameterData(entry.getKey(), new TeltonikaParameter(-2, entry.getKey(), "-", "UNKNOWN", "-", "-", "-", "-", "Unknown Parameter", "0", "Unknown"));
+                        }
+                        return desiredEntry;
 					}, // Key Mapper
 					Map.Entry::getValue, // Value Mapper
 					(existing, replacement) -> {
@@ -193,7 +193,7 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 			if(Objects.equals(parameterId, "ang")){
 				//This is the parameter ID which triggered the payload
 				Object angle = ValueUtil.getValueCoerced(entry.getValue(), ValueType.DIRECTION.getType()).orElseThrow();
-				Attribute<String> attr = new Attribute(VehicleAsset.DIRECTION, angle);
+				Attribute<?> attr = new Attribute(VehicleAsset.DIRECTION, angle);
 				attributes.add(attr);
 				continue;
 			}

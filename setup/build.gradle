@@ -3,8 +3,13 @@ apply plugin: "java-library"
 dependencies {
     api project(":model")
     api project(":manager")
+
+    implementation "io.openremote.ui:openremote-insights:$openremoteVersion"
+    implementation "io.openremote.ui:openremote-manager:$openremoteVersion"
+    implementation "io.openremote.ui:openremote-shared:$openremoteVersion"
+    implementation "io.openremote.ui:openremote-swagger:$openremoteVersion"
 }
 
-task installDist {
+tasks.register('installDist') {
     dependsOn jar
 }
