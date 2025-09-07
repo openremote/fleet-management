@@ -8,9 +8,7 @@ scmVersion {
     repository {
         remote.set('origin')
     }
-    tag {
-        prefix.set('')
-    }
+    tag.prefix = 'V-'
 }
 
 allprojects {

@@ -14,5 +14,3 @@ fileTree(dir: rootDir, include: "**/build.gradle", excludes: ["**/node_modules/*
         .each {
             include it.parent.replace(rootDir.canonicalPath, "").replace("\\", ":").replace("/", ":")
         }
-
-include 'manager:agent'
