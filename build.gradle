@@ -1,3 +1,17 @@
+// Configure version based on Git tags
+apply plugin: 'pl.allegro.tech.build.axion-release'
+scmVersion {
+    releaseOnlyOnReleaseBranches = true
+    releaseBranchNames = ['main']
+    unshallowRepoOnCI.set(true)
+    versionCreator('simple')
+    repository {
+        remote.set('origin')
+    }
+    tag {
+        prefix.set('')
+    }
+}
 
 allprojects {
     // Apply common project setup

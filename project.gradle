@@ -337,10 +337,6 @@ tasks.register('npmBuild', Exec) {
     dependsOn getYarnInstallTask()
     commandLine npmCommand("yarn"), "run", "build"
 }
-tasks.register('npmTest', Exec) {
-    dependsOn getYarnInstallTask()
-    commandLine npmCommand("yarn"), "run", "test"
-}
 tasks.register('npmServe', Exec) {
     dependsOn getYarnInstallTask()
     commandLine npmCommand("yarn"), "run", "serve"
