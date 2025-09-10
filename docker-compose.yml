@@ -58,7 +58,7 @@ services:
   # This service will only populate an empty volume on startup and then exit.
   # If the volume already contains data, it exits immediately.
   deployment:
-    image: pankalog/fleet-deployment:${DEPLOYMENT_VERSION?DEPLOYMENT_VERSION must be set}
+    image: pankalog/fleet-deployment:${DEPLOYMENT_VERSION:-latest}
     volumes:
       - deployment-data:/deployment
 
