@@ -28,8 +28,6 @@
 #
 # All data is kept in volumes. Create a backup of the volumes to preserve data.
 #
-version: '2.4'
-
 volumes:
   proxy-data:
   deployment-data:
