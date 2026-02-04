@@ -1263,7 +1263,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openremote/core@npm:1.15.2, @openremote/core@npm:~1.15.2":
+"@openremote/core@npm:1.15.2, @openremote/core@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/core@npm:1.15.2"
   dependencies:
@@ -1287,9 +1287,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@openremote/custom-react@workspace:ui/app/custom-react"
   dependencies:
-    "@openremote/core": "npm:~1.15.2"
-    "@openremote/model": "npm:~1.15.2"
-    "@openremote/or-mwc-components": "npm:~1.15.2"
+    "@openremote/core": "npm:~1.15.1"
+    "@openremote/model": "npm:~1.15.1"
+    "@openremote/or-mwc-components": "npm:~1.15.1"
     "@rspack/cli": "npm:~1.7.2"
     "@rspack/core": "npm:~1.7.2"
     "@types/react": "npm:^19.2.2"
@@ -1307,8 +1307,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@openremote/custom@workspace:ui/app/custom"
   dependencies:
-    "@openremote/manager": "npm:~1.15.2"
-    "@openremote/util": "npm:~1.15.2"
+    "@openremote/manager": "npm:~1.15.1"
+    "@openremote/util": "npm:~1.15.1"
     "@rspack/cli": "npm:~1.7.2"
     "@rspack/core": "npm:~1.7.2"
     css-loader: "npm:^7.1.2"
@@ -1325,7 +1325,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@openremote/manager@npm:~1.15.2":
+"@openremote/manager@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/manager@npm:1.15.2"
   dependencies:
@@ -1358,7 +1358,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openremote/model@npm:1.15.2, @openremote/model@npm:~1.15.2":
+"@openremote/model@npm:1.15.2, @openremote/model@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/model@npm:1.15.2"
   checksum: 10/72029adf4776ea9ef6052e7cae152214c3e9c61c6411cdb566ced3b922635842863d8395d23a76e36831c561d0852608db4a6198c23bf720311a226430b552d0
@@ -1660,7 +1660,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openremote/or-mwc-components@npm:1.15.2, @openremote/or-mwc-components@npm:~1.15.2":
+"@openremote/or-mwc-components@npm:1.15.2, @openremote/or-mwc-components@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/or-mwc-components@npm:1.15.2"
   dependencies:
@@ -1778,7 +1778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openremote/rest@npm:1.15.2, @openremote/rest@npm:~1.15.2":
+"@openremote/rest@npm:1.15.2, @openremote/rest@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/rest@npm:1.15.2"
   dependencies:
@@ -1788,7 +1788,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openremote/util@npm:^1.15.2, @openremote/util@npm:~1.15.2":
+"@openremote/util@npm:^1.15.1, @openremote/util@npm:~1.15.1":
   version: 1.15.2
   resolution: "@openremote/util@npm:1.15.2"
   bin:
@@ -4812,7 +4812,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "model@workspace:ui/component/model"
   dependencies:
-    "@openremote/util": "npm:^1.15.2"
+    "@openremote/util": "npm:^1.15.1"
   languageName: unknown
   linkType: soft
 
@@ -5604,8 +5604,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "rest@workspace:ui/component/rest"
   dependencies:
-    "@openremote/rest": "npm:~1.15.2"
-    "@openremote/util": "npm:~1.15.2"
+    "@openremote/rest": "npm:~1.15.1"
+    "@openremote/util": "npm:~1.15.1"
     "@rspack/core": "npm:~1.7.2"
     "@types/qs": "npm:^6.9.7"
     model: "workspace:*"
@@ -5638,7 +5638,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@openremote/util": "npm:~1.15.2"
+    "@openremote/util": "npm:~1.15.1"
   languageName: unknown
   linkType: soft
 

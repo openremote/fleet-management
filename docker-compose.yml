@@ -104,7 +104,7 @@ services:
     # <<: *awslogs
 
   manager:
-    image: openremote/manager:${MANAGER_VERSION:-latest}
+    image: openremote/manager:${MANAGER_VERSION:-1.15.1}
     restart: always
     depends_on:
       keycloak:

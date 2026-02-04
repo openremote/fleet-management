@@ -11,9 +11,9 @@
     "serve": "npx cross-env NODE_ENV=development NODE_OPTIONS=--max_old_space_size=4096 rspack serve"
   },
   "dependencies": {
-    "@openremote/core": "~1.15.2",
-    "@openremote/model": "~1.15.2",
-    "@openremote/or-mwc-components": "~1.15.2",
+    "@openremote/core": "~1.15.1",
+    "@openremote/model": "~1.15.1",
+    "@openremote/or-mwc-components": "~1.15.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
