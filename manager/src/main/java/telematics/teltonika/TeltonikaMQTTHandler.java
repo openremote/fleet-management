@@ -396,7 +396,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         String clientId = topic.getTokens()[1];
 
         try {
-            getLogger().log(Level.WARNING, ValueUtil.JSON.writeValueAsString(body.toString(StandardCharsets.UTF_8)));
+            getLogger().log(Level.FINEST, ValueUtil.JSON.writeValueAsString(body.toString(StandardCharsets.UTF_8)));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
