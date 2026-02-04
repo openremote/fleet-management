@@ -232,6 +232,11 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         //Find the asset in question
         VehicleAsset asset = assetStorageService.find(event.getId(), VehicleAsset.class);
 
+        if(asset == null){
+            getLogger().warning("Couldn't find asset with id "+event.getId()+" when trying to send command to device");
+            return;
+        }
+
         // Double check, remove later, sanity checks
         if(asset.hasAttribute(getConfig().getCommandAttribute().getValue().orElse("sendToDevice"))){
             if(Objects.equals(event.getId(), asset.getId())){
@@ -396,7 +401,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         String clientId = topic.getTokens()[1];
 
         try {
-            getLogger().log(Level.FINEST, ValueUtil.JSON.writeValueAsString(body.toString(StandardCharsets.UTF_8)));
+            getLogger().log(Level.FINEST, ValueUtil.JSON.readTree(body.toString(StandardCharsets.UTF_8)).toPrettyString());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
