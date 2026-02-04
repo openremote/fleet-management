@@ -21,7 +21,7 @@ allprojects {
 // When using encryption the the GFE_PASSWORD environment variable must be set or the build will fail
 // use ./gradlew encryptFiles to encrypt files
 
-//apply plugin: "com.cherryperry.gradle-file-encrypt"
+//apply plugin: 'io.openremote.com.cherryperry.gradle-file-encrypt'
 //gradleFileEncrypt {
 //    // files to encrypt
 //    plainFiles.from("deployment/manager/fcm.json")
@@ -36,7 +36,14 @@ allprojects {
 //        return password.toCharArray()
 //    }
 //}
+//interface InjectedExecOps {
+//    @Inject //@javax.inject.Inject
+//    ExecOperations getExecOps()
+//}
+//
 //tasks.register('checkFilesGitIgnoredNew') {
+//    def injected = project.objects.newInstance(InjectedExecOps)
+//
 //    doLast {
 //        // The provided checkFilesGitIgnored task doesn't work on Windows so here's one that does
 //        def plainFiles = project.getProperties().get("gradleFileEncrypt").plainFiles
@@ -51,7 +58,7 @@ allprojects {
 //            args.add("-q")
 //            args.add(plainFile) // Assuming plainFile is a single file path
 //
-//            def result = project.exec {
+//            def result = injected.execOps.exec {
 //                commandLine args
 //                ignoreExitValue = true // Allow the build to continue so we can check the exit value
 //            }
