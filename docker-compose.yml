@@ -114,7 +114,7 @@ services:
       - deployment-data:/deployment
       # Map data should be accessed from a volume mount
       # 1). Host filesystem - /deployment.local:/deployment.local
-      # 2) NFS/EFS network mount - efs-data:/efs
+      # 2). NFS/EFS network mount - efs-data:/efs
     environment:
       # Here are some typical environment variables you want to set
       # see openremote/profile/deploy.yml for details
@@ -131,6 +131,5 @@ services:
       OR_ADDITIONAL_HOSTNAMES: ${OR_ADDITIONAL_HOSTNAMES:-}
       OR_SSL_PORT: ${OR_SSL_PORT:--1}
       OR_DEV_MODE: ${OR_DEV_MODE:-false}
-      OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
       #OR_MAP_TILES_PATH: '/efs/europe.mbtiles'
     # <<: *awslogs

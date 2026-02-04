@@ -3,17 +3,11 @@ package org.openremote.model.custom;
 import jakarta.persistence.Entity;
 import org.openremote.model.Constants;
 import org.openremote.model.asset.AssetDescriptor;
-import org.openremote.model.attribute.MetaItem;
-import org.openremote.model.attribute.MetaMap;
 import org.openremote.model.teltonika.TeltonikaModelConfigurationAsset;
 import org.openremote.model.value.AttributeDescriptor;
-import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueType;
 import org.openremote.model.value.impl.ColourRGB;
-import scala.collection.immutable.Stream;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 /**
  * CarAsset is an extension of the VehicleAsset class, specifically intended for the fleet management use case of OpenRemote.

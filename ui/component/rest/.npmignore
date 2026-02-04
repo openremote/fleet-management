@@ -2,6 +2,7 @@ build/
 build.gradle
 test/
 src/
+rspack.config.js
 webpack.config.js
 tsconfig.json
 dist/*.map

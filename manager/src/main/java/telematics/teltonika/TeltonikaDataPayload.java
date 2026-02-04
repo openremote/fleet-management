@@ -192,8 +192,8 @@ public class TeltonikaDataPayload implements ITeltonikaPayload {
 			}
 			if(Objects.equals(parameterId, "ang")){
 				//This is the parameter ID which triggered the payload
-				Object angle = ValueUtil.getValueCoerced(entry.getValue(), ValueType.DIRECTION.getType()).orElseThrow();
-				Attribute<?> attr = new Attribute(VehicleAsset.DIRECTION, angle);
+				Integer angle = ValueUtil.getValueCoerced(entry.getValue(), ValueType.DIRECTION.getType()).orElseThrow();
+				Attribute<?> attr = new Attribute<Integer>(VehicleAsset.DIRECTION, angle);
 				attributes.add(attr);
 				continue;
 			}
