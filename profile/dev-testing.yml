@@ -24,7 +24,6 @@ services:
       service: postgresql
     volumes:
       - ../tmp:/storage
-      - postgresql-data:/var/lib/postgresql/data
     # Access directly if needed on localhost
     ports:
       - "5432:5432"

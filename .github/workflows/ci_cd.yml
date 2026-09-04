@@ -5,13 +5,13 @@ on:
   # Push excluding tags and workflow changes
   push:
     branches:
-      - 'main'
+      - "main"
     tags-ignore:
-      - '*.*'
+      - "*.*"
     paths-ignore:
-      - '.github/**'
-      - '.ci_cd/**'
-      - '**/*.md'
+      - ".github/**"
+      - ".ci_cd/**"
+      - "**/*.md"
 
   # PR
   pull_request:
@@ -24,16 +24,16 @@ on:
   workflow_dispatch:
     inputs:
       ENVIRONMENT:
-        description: 'Environment to use (if any)'
+        description: "Environment to use (if any)"
       CLEAN_INSTALL:
-        description: 'Delete data before starting'
+        description: "Delete data before starting"
         type: boolean
       COMMIT:
-        description: 'Repo branch or commit SHA to checkout'
+        description: "Repo branch or commit SHA to checkout"
       OR_HOSTNAME:
-        description: 'Host to deploy to (e.g. demo.openremote.app)'
+        description: "Host to deploy to (e.g. demo.openremote.app)"
       OR_ADMIN_PASSWORD:
-        description: 'Admin password override'
+        description: "Admin password override"
 
 # Un-comment to monitor manager docker image tags for changes and trigger a redeploy when they change (see .ci_cd/README.md)
 #   schedule:
