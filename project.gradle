@@ -5,6 +5,18 @@ import java.util.stream.Collectors
 import java.util.stream.Stream
 import java.util.stream.StreamSupport
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility
+
+import cz.habarta.typescript.generator.DateMapping
+import cz.habarta.typescript.generator.EnumMapping
+import cz.habarta.typescript.generator.Jackson2Configuration
+import cz.habarta.typescript.generator.JsonLibrary
+import cz.habarta.typescript.generator.ModuleDependency
+import cz.habarta.typescript.generator.OptionalProperties
+import cz.habarta.typescript.generator.RestNamespacing
+import cz.habarta.typescript.generator.TypeScriptFileType
+import cz.habarta.typescript.generator.TypeScriptOutputKind
+
 import static org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS
 import static org.apache.tools.ant.taskdefs.condition.Os.isFamily
 import static org.jetbrains.gradle.ext.ShortenCommandLine.MANIFEST
@@ -187,7 +199,7 @@ idea {
 def createTSGeneratorConfigForModel(String outputFileName, Project...customProjectsToScan) {
     def config = createTSGeneratorConfig(false, outputFileName, customProjectsToScan) <<
             {
-                extensions = [
+                extensionClasses = [
                         "org.openremote.model.util.AssetModelInfoExtension",
                         "CustomExtension",
                         "JsonSerializeExtension"
@@ -205,7 +217,7 @@ def createTSGeneratorConfigForModel(String outputFileName, Project...customProje
 def createTSGeneratorConfigForClient(String outputFileName, File modelInfoJson, Project...customProjectsToScan) {
     def config = createTSGeneratorConfig(true, outputFileName, customProjectsToScan) <<
             {
-                extensions = [
+                extensionClasses = [
                         "CustomExtension",
                         "JsonSerializeExtension",
                         "CustomAggregatedApiClient",
@@ -223,7 +235,7 @@ def createTSGeneratorConfigForClient(String outputFileName, File modelInfoJson, 
                         "org.openremote.model.value.ValueDescriptor<T>:Model.ValueDescriptor"
                 ]
                 moduleDependencies = [
-                        cz.habarta.typescript.generator.ModuleDependency.module(
+                        ModuleDependency.module(
                                 "model",
                                 "Model",
                                 modelInfoJson,
@@ -231,7 +243,7 @@ def createTSGeneratorConfigForClient(String outputFileName, File modelInfoJson, 
                                 (String) null
                         )
                 ]
-                restNamespacing = "perResource"
+                restNamespacing = RestNamespacing.perResource
             }
     return config
 }
@@ -251,7 +263,7 @@ def createTSGeneratorConfig(boolean outputAPIClient, String outputFileName, Proj
             Path packagePath = it.toPath().relativize(srcPath.toPath())
             return StreamSupport
                     .stream(packagePath.spliterator(), false)
-                    .map(Path::toString)
+                    .map({ java.nio.file.Path path -> path.toString() })
                     .collect(Collectors.joining(".")) + (outputAPIClient ? ".**Resource" : ".**")
         }
     }.toList()
@@ -261,7 +273,7 @@ def createTSGeneratorConfig(boolean outputAPIClient, String outputFileName, Proj
             : [ "org.openremote.model.**" ]
 
     return {
-        jsonLibrary = "jackson2"
+        jsonLibrary = JsonLibrary.jackson2
         classPatterns = baseClassPattern + classPatternGlobs
         customTypeNamingFunction = "function(name, simpleName) { if (name.indexOf(\"\$\") > 0) return name.substr(name.lastIndexOf(\".\")+1).replace(\"\$\",\"\"); }"
         excludeClassPatterns = [
@@ -273,19 +285,20 @@ def createTSGeneratorConfig(boolean outputAPIClient, String outputFileName, Proj
                 "org.hibernate.**",
                 "jakarta.**"
         ]
-        mapEnum = cz.habarta.typescript.generator.EnumMapping.asEnum
-        mapDate = cz.habarta.typescript.generator.DateMapping.asNumber
-        optionalProperties = "all" // TODO: cleanup model to be more explicit about optional params
-        outputFileType = "implementationFile"
-        outputKind = "module"
+        mapEnum = EnumMapping.asEnum
+        mapDate = DateMapping.asNumber
+        optionalProperties = OptionalProperties.all // TODO: cleanup model to be more explicit about optional params
+        outputFileType = TypeScriptFileType.implementationFile
+        outputKind = TypeScriptOutputKind.module
         outputFile = outputFileName
-        jackson2Configuration = [
-                fieldVisibility: "ANY",
-                creatorVisibility: "ANY",
-                getterVisibility: "NONE",
-                isGetterVisibility: "NONE",
-                setterVisibility: "NONE"
-        ]
+
+        def jackson2Config = new Jackson2Configuration()
+        jackson2Config.fieldVisibility = Visibility.ANY
+        jackson2Config.creatorVisibility = Visibility.ANY
+        jackson2Config.getterVisibility = Visibility.NONE
+        jackson2Config.isGetterVisibility = Visibility.NONE
+        jackson2Config.setterVisibility = Visibility.NONE
+        jackson2Configuration.set(jackson2Config)
         jackson2Modules = [
                 "com.fasterxml.jackson.datatype.jdk8.Jdk8Module",
                 "com.fasterxml.jackson.datatype.jsr310.JavaTimeModule",

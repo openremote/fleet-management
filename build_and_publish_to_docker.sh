@@ -3,10 +3,10 @@ set -euo pipefail
 
 # Configuration
 DOCKER_REPO="pankalog/fleet-deployment"
-COMPOSE_PROJECT="fleet-management"
-BUILDER_NAME="multi-platform-builder"
+COMPOSE_PROJECT="fleet"
+BUILDER_NAME="fleet-multi-platform-builder"
 PLATFORMS="linux/amd64,linux/arm64"
-MANAGER_VERSION="1.15.1"
+MANAGER_VERSION="1.30.0"
 
 # Derived values
 GIT_VERSION=$(git rev-parse --short HEAD)
@@ -48,8 +48,13 @@ export MANAGER_VERSION="$MANAGER_VERSION"
 docker pull "${DOCKER_REPO}:${GIT_VERSION}"
 docker compose -p "$COMPOSE_PROJECT" pull deployment manager
 
-echo "==> Stopping services and cleaning up..."
-docker compose -p "$COMPOSE_PROJECT" down -v
+echo "==> Stopping services..."
+docker compose -p "$COMPOSE_PROJECT" down
+
+# The deployment container only copies custom code into an empty volume. Refresh
+# that generated volume so the newly published extension JAR is actually loaded.
+# Persistent PostgreSQL, manager, and proxy/certificate volumes are preserved.
+docker volume rm "${COMPOSE_PROJECT}_deployment-data"
 
 echo "==> Starting services with fresh images..."
 docker compose -p "$COMPOSE_PROJECT" up -d

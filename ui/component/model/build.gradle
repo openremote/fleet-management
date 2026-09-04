@@ -1,13 +1,4 @@
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "cz.habarta.typescript-generator:typescript-generator-gradle-plugin:$typescriptGeneratorVersion"
-    }
-}
-
 plugins {
     id 'groovy'
     id 'cz.habarta.typescript-generator'
@@ -25,14 +16,16 @@ dependencies {
 
 generateTypeScript createTSGeneratorConfigForModel("src/model.ts", findProject(":model"))
 
-build.dependsOn generateTypeScript, npmBuild
-npmBuild.dependsOn generateTypeScript
+def generateTypeScriptTask = tasks.named("generateTypeScript") {
+    // Work around typescript-generator exposing non-serializable configuration objects as Gradle task inputs.
+    doNotTrackState("typescript-generator uses non-serializable task input types")
+}
 
-clean {
-    doLast {
-        def dir = new File("${projectDir}/dist")
-        dir.deleteDir()
-    }
+build.dependsOn generateTypeScriptTask, npmBuild
+npmBuild.dependsOn generateTypeScriptTask
+
+tasks.named('clean', Delete) {
+    delete layout.projectDirectory.dir('dist')
 }
 
 tasks.register('prepareUi') {

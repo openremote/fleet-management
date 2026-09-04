@@ -22,7 +22,7 @@
   "author": "OpenRemote",
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "@openremote/util": "^1.15.1"
+    "@openremote/util": "^1.30.0"
   },
   "publishConfig": {
     "access": "restricted"

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
-import org.keycloak.KeycloakSecurityContext;
 import org.openremote.container.timer.TimerService;
+import org.openremote.container.security.AuthContext;
 import org.openremote.model.protocol.mqtt.Topic;
 import org.openremote.model.util.UniqueIdentifierGenerator;
 import org.openremote.manager.asset.AssetProcessingService;
@@ -292,9 +292,9 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
         return LOG;
     }
     @Override
-    public boolean checkCanSubscribe(RemotingConnection connection, KeycloakSecurityContext securityContext, Topic topic) {
+    public boolean checkCanSubscribe(RemotingConnection connection, AuthContext authContext, Topic topic) {
         // Skip standard checks
-        if (!canSubscribe(connection, securityContext, topic)) {
+        if (!canSubscribe(connection, authContext, topic)) {
             getLogger().warning("Cannot subscribe to this topic, topic=" + topic + ", connection" + connection);
             return false;
         }
@@ -308,7 +308,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      */
     // To be removed when auto-provisioning works
     @Override
-    public boolean canSubscribe(RemotingConnection connection, KeycloakSecurityContext securityContext, Topic topic) {
+    public boolean canSubscribe(RemotingConnection connection, AuthContext authContext, Topic topic) {
         if(topic.getTokens().length < 5){
             getLogger().warning(MessageFormat.format("Topic {0} is not a valid Topic. Please use a valid Topic.", topic.toString()));
             return false;
@@ -335,12 +335,12 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
      * To be removed after implementation is complete.
      */
     @Override
-    public boolean checkCanPublish(RemotingConnection connection, KeycloakSecurityContext securityContext, Topic topic) {
-        return canPublish(connection,securityContext, topic);
+    public boolean checkCanPublish(RemotingConnection connection, AuthContext authContext, Topic topic) {
+        return canPublish(connection, authContext, topic);
     }
 
     @Override
-    public boolean canPublish(RemotingConnection connection, KeycloakSecurityContext securityContext, org.openremote.model.protocol.mqtt.Topic topic) {
+    public boolean canPublish(RemotingConnection connection, AuthContext authContext, Topic topic) {
         getLogger().finer("Teltonika device will publish to Topic "+topic.toString()+" to transmit payload");
         return true;
     }
@@ -561,7 +561,7 @@ public class TeltonikaMQTTHandler extends MQTTHandler {
 
         Asset<? extends  Asset<VehicleAsset>> finalNewAsset = newAsset;
         attributes.get(VehicleAsset.LAST_CONTACT).flatMap(Attribute::getValue).ifPresent(dateVal -> {
-            finalNewAsset.setCreatedOn(dateVal);
+            finalNewAsset.setCreatedOn(dateVal.toInstant());
             finalNewAsset.getAttributes().forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
             attributes.forEach(attribute -> attribute.setTimestamp(dateVal.getTime()));
         });

@@ -82,7 +82,7 @@ services:
     # <<: *awslogs
 
   postgresql:
-    image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
+    image: openremote/postgresql:${POSTGRESQL_VERSION:-latest-slim}
     restart: always
     volumes:
       - postgresql-data:/var/lib/postgresql/data
@@ -98,13 +98,12 @@ services:
     volumes:
       - deployment-data:/deployment
     environment:
-      KEYCLOAK_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
-      KC_HOSTNAME: ${OR_HOSTNAME:-localhost}
-      KC_HOSTNAME_PORT: ${OR_SSL_PORT:--1}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${OR_ADMIN_PASSWORD:?OR_ADMIN_PASSWORD must be set}
+      KC_HOSTNAME: https://${OR_HOSTNAME:-localhost}/auth
     # <<: *awslogs
 
   manager:
-    image: openremote/manager:${MANAGER_VERSION:-1.15.1}
+    image: openremote/manager:${MANAGER_VERSION:-1.30.0}
     restart: always
     depends_on:
       keycloak:
