@@ -53,7 +53,7 @@ cmd /C "set OR_HOSTNAME=192.168.1.1 && set OR_SSL_PORT=8443 && docker-compose -p
 
 To create the OpenRemote fleet management integration, a new custom project was created using [OpenRemote's custom-project template](https://github.com/openremote/custom-project). To view the changes of files between the original custom-project repository and the current state of the repository, press [here]( https://github.com/openremote/fleet-management/compare/668ae6fdfb20eeae5977ad62b655bf3fb3d58cdd...main). In this way, you can see the files that have been added since the creation of this repository. 
 
-This repository uses the [feature/fleet-management](https://github.com/openremote/openremote/tree/feature/fleet-management) branch of the main OpenRemote repository as its core, specifically for adding more UI-related features. If the UI features are not something that interest you, you're encouraged to change the submodule to use the `master` OpenRemote branch. 
+This repository uses the [feature/fleet-management](https://github.com/openremote/core/tree/feature/fleet-management) branch of the main OpenRemote repository as its core, specifically for adding more UI-related features. If the UI features are not something that interest you, you're encouraged to change the submodule to use the `main` OpenRemote branch.
 
 
 # Support and Community

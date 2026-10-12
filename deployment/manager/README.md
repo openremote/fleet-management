@@ -1,5 +1,5 @@
 ## Manager customisation
-As well as the below information please see the [Manager endpoints and file paths](https://github.com/openremote/openremote/wiki/Architecture:-Manager-endpoints-and-file-paths) wiki.
+As well as the below information please see the [Manager endpoints and file paths](https://docs.openremote.io/docs/architecture/manager-endpoints-and-file-paths/) documentation.
 
 ### Custom provisioning files (`provisioning/`)
 As an alternative to writing `java` setup code you can also provide `json` representations of Assets which will be automatically deserialized and added to the system when doing a clean install.
@@ -14,7 +14,7 @@ This `app` directory is used as the `$CUSTOM_APP_DOCROOT` and can be used to sto
 This is where your Firebase cloud messaging config file should be placed to enable push notification for Android/iOS.
 
 ### Logging Configuration (`logging.properties`)
-Custom `JUL` logging configuration file; default log file can be found [here](https://github.com/openremote/openremote/blob/master/manager/src/main/resources/logging.properties).
+Custom `JUL` logging configuration file; default log file can be found [here](https://github.com/openremote/core/blob/main/manager/src/main/resources/logging.properties).
 
 ### Keycloak Credentials (`keycloak.json`)
 This is where custom keycloak credentials are stored/can be supplied; by default the manager will auto generate these during a clean install.
