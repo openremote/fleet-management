@@ -1,4 +1,4 @@
-# This just references the CI/CD workflow in the main OpenRemote repo
+# This references the CI/CD workflow in OpenRemote Core
 name: CI/CD
 
 on:
@@ -42,7 +42,7 @@ on:
 jobs:
   call-main-repo:
     name: CI/CD
-    uses: openremote/openremote/.github/workflows/ci_cd.yml@master
+    uses: openremote/core/.github/workflows/ci_cd.yml@main
     with:
       INPUTS: ${{ toJSON(github.event.inputs) }}
     secrets: inherit

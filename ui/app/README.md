@@ -14,7 +14,7 @@ Here's a list of the apps, and what they do;
 
 ### /custom
 This is an example web application built with [Lit Web Components](https://lit.dev) and [Webpack](https://webpack.js.org).  
-Apps in our main OpenRemote [repository](https://github.com/openremote/openremote) are built with these technologies as well.  
+Apps in [OpenRemote Core](https://github.com/openremote/core) are built with these technologies as well.
 It can be used as a template to add your own pages on top of it.
 
 ### /custom-react

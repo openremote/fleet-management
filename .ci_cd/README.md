@@ -1,3 +1,3 @@
 # CI/CD workflow files
 
-This directory follows the same structure as the main [OpenRemote repo](https://github.com/openremote/openremote/tree/master/.ci_cd).
+This directory follows the same structure as [OpenRemote Core](https://github.com/openremote/core/tree/main/.ci_cd).
